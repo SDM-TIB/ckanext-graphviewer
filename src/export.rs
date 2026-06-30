@@ -362,6 +362,48 @@ pub fn save_file(filename: &str, content: &str, _mime_type: &str) {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn save_png_from_svg_web(svg_data: &str, filename: &str) {
+    use wasm_bindgen::JsValue;
+
+    let js_code = r#"
+        const svgBlob = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+
+            const scale = 2; // 2x high-resolution multiplier
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            const ctx = canvas.getContext("2d");
+            ctx.scale(scale, scale);
+            ctx.drawImage(img, 0, 0);
+
+            URL.revokeObjectURL(url);
+
+            const a = document.createElement("a");
+            a.download = filename;
+            a.href = canvas.toDataURL("image/png");
+
+            // Firefox requires the link to be in the DOM to click it
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        img.src = url;
+    "#;
+
+    let func = js_sys::Function::new_with_args("svgString, filename", js_code);
+    let _ = func.call2(
+        &JsValue::NULL,
+        &JsValue::from_str(svg_data),
+        &JsValue::from_str(filename),
+    );
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub fn save_png_from_svg(svg_data: &str, filename: &str) {
     // resvg re-exports usvg and tiny_skia to prevent version conflicts

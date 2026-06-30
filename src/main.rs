@@ -551,10 +551,13 @@ impl eframe::App for App {
                                 if ui.button("Export as PNG").clicked() {
                                     let filename = format!("LDM_graph_export_{}.png", timestamp);
 
+                                    let svg_data = crate::export::generate_svg(nodes, edges, &self.ui.theme);
+
                                     #[cfg(target_arch = "wasm32")]
-                                    if let Some(rect) = self.ui.canvas_rect {
-                                        crate::trigger_wasm_canvas_download(rect, ctx.pixels_per_point(), &filename);
-                                        log::info!("Triggered WASM PNG download");
+                                    {
+                                        // Use the browser's native engine to render the SVG to a crisp PNG
+                                        crate::export::save_png_from_svg_web(&svg_data, &filename);
+                                        log::info!("Triggered WASM SVG-to-PNG download");
                                     }
 
                                     #[cfg(not(target_arch = "wasm32"))]
