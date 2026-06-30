@@ -27,9 +27,17 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
         # show graph viewer with selection boxes
         def show_global_graph_viewer():
             api_url = os.environ.get('LDM_KNOWLEDGE_GRAPH_EXPLORATION_API')
+            ckan_base_url = os.environ.get('LDM_KNOWLEDGE_GRAPH_EXPLORATION_CKAN_BASE_URL')
+            ckan_api_route = os.environ.get('LDM_KNOWLEDGE_GRAPH_EXPLORATION_CKAN_API_ROUTE')
+
+            ckan_api_url = ckan_base_url + ckan_api_route
+
             return toolkit.render(
                 'package/graph_viewer.html',
-                extra_vars={'api_url': api_url}
+                extra_vars={
+                    'api_url': api_url,
+                    'ckan_api_url': ckan_api_url
+                }
             )
 
         # show graph viewer without selection boxes and a starting with a dataset
