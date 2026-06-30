@@ -1,12 +1,12 @@
-# Rust WASM RDF Graph Visualizer for CKAN
+# Rust Wasm RDF Graph Visualizer for CKAN
 
-this extention for ckan enables the visiualisation of a ttl file
+This extension for CKAN enables the visualization of a TTL file.
 
-the wasm file create a get response to the ttl file of a called dataset and builds a graph from it
+The Wasm file creates a GET response to the TTL file of a called dataset and builds a graph from it.
 
-the build js and wasm files are located in ckanext/graphviewer/public/graph_viewer/
+The build JS and Wasm files are located in `ckanext/graphviewer/public/graph_viewer/`.
 
-# how to build
+# How to Build
 
 ``` bash
 $ trunk build --release --dist ckanext/graphviewer/public/graph_viewer/ --filehash false
