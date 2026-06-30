@@ -1,2 +1,5 @@
 target/
 *~undo-tree~
+
+**/__pycache__/
+*.pyc
