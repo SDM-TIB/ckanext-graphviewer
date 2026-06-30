@@ -148,6 +148,7 @@ pub enum AppState {
 
 pub struct AppConfig {
     pub api_url: String,
+    pub ckan_api_url: String,
     pub is_global_viewer: bool,
     pub rows_per_page: usize,
 }
@@ -200,6 +201,18 @@ fn get_api_url_from_dom() -> Option<String> {
     let document = window.document()?;
     if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
         if let Some(url) = canvas.get_attribute("data-api-url") {
+            return Some(url.trim_end_matches('/').to_string());
+        }
+    }
+    None
+}
+
+#[cfg(target_arch = "wasm32")]
+fn get_ckan_api_url_from_dom() -> Option<String> {
+    let window = web_sys::window()?;
+    let document = window.document()?;
+    if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
+        if let Some(url) = canvas.get_attribute("ckan-api-url") {
             return Some(url.trim_end_matches('/').to_string());
         }
     }
@@ -296,6 +309,11 @@ impl App {
         let api_url = "http://0.0.0.0:5742".to_string();
 
         #[cfg(target_arch = "wasm32")]
+        let ckan_api_url = get_ckan_api_url_from_dom().unwrap_or_else(|| "https://service.tib.eu/ldmservice/api/3".to_string());
+        #[cfg(not(target_arch = "wasm32"))]
+        let ckan_api_url = "https://service.tib.eu/ldmservice/api/3".to_string();
+
+        #[cfg(target_arch = "wasm32")]
         let n3_target_url = get_n3_url_from_dom();
         #[cfg(not(target_arch = "wasm32"))]
         let n3_target_url: Option<String> = None;
@@ -356,6 +374,7 @@ impl App {
         Self {
             config: AppConfig {
                 api_url: api_url,
+                ckan_api_url: ckan_api_url,
                 is_global_viewer: is_global_viewer,
                 rows_per_page: 100,
             },
@@ -404,7 +423,8 @@ impl App {
 
         // Hitting the CKAN endpoint directly for suggestions
         let request = ehttp::Request::get(format!(
-            "https://service.tib.eu/ldmservice/api/3/action/package_search{}",
+            "{}/action/package_search{}",
+            self.config.ckan_api_url,
             query_string
         ));
 
