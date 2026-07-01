@@ -9,6 +9,7 @@
             id="the_canvas_id"
             style="width: 100%; height: 100%; display: block;"
             data-api-url="{{ api_url }}"
+            ckan-api-url="{{ ckan_api_url }}"
             {% if pkg_dict %}
             data-pkg-dict="{{ pkg_dict | tojson | forceescape }}"
             data-n3-url="{{ h.url_for('home', qualified=True) }}{{ pkg_type }}/{{ pkg_dict.name }}.n3"
