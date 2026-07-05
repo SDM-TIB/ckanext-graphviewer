@@ -148,7 +148,6 @@ pub enum AppState {
 
 pub struct AppConfig {
     pub api_url: String,
-    pub ckan_api_url: String,
     pub is_global_viewer: bool,
     pub rows_per_page: usize,
 }
@@ -219,27 +218,24 @@ pub fn get_dynamic_api_url() -> String {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn get_api_url_from_dom() -> Option<String> {
-    let window = web_sys::window()?;
-    let document = window.document()?;
-    if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
-        if let Some(url) = canvas.get_attribute("data-api-url") {
-            return Some(url.trim_end_matches('/').to_string());
+pub fn get_dynamic_ckan_url() -> String {
+    if let Some(window) = web_sys::window() {
+        let location = window.location();
+
+        // Extract the protocol (e.g., "http:") and hostname (e.g., "192.168.1.50" or "example.com")
+        if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
+            // Construct the target URL pointing to your Python FastAPI port
+            return format!("{}//{}:{}", protocol, hostname, port);
         }
     }
-    None
+    // Fallback if browser APIs fail
+    "http://127.0.0.1:5000".to_string()
 }
 
-#[cfg(target_arch = "wasm32")]
-fn get_ckan_api_url_from_dom() -> Option<String> {
-    let window = web_sys::window()?;
-    let document = window.document()?;
-    if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
-        if let Some(url) = canvas.get_attribute("ckan-api-url") {
-            return Some(url.trim_end_matches('/').to_string());
-        }
-    }
-    None
+#[cfg(not(target_arch = "wasm32"))]
+pub fn get_dynamic_ckan_url() -> String {
+    // Native desktop apps run locally, so they point to the local API
+    "http://127.0.0.1:5000".to_string()
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -274,11 +270,6 @@ impl App {
         let state = Arc::new(Mutex::new(AppState::Loading));
 
         let api_url = get_dynamic_api_url();
-
-        #[cfg(target_arch = "wasm32")]
-        let ckan_api_url = get_ckan_api_url_from_dom().unwrap_or_else(|| "https://service.tib.eu/ldmservice/api/3".to_string());
-        #[cfg(not(target_arch = "wasm32"))]
-        let ckan_api_url = "https://service.tib.eu/ldmservice/api/3".to_string();
 
         #[cfg(target_arch = "wasm32")]
         let n3_target_url = get_n3_url_from_dom();
@@ -341,7 +332,6 @@ impl App {
         Self {
             config: AppConfig {
                 api_url: api_url,
-                ckan_api_url: ckan_api_url,
                 is_global_viewer: is_global_viewer,
                 rows_per_page: 100,
             },
@@ -390,8 +380,8 @@ impl App {
 
         // Hitting the CKAN endpoint directly for suggestions
         let request = ehttp::Request::get(format!(
-            "{}/action/package_search{}",
-            self.config.ckan_api_url,
+            "{}/api/3/action/package_search{}",
+            self.config.api_url,
             query_string
         ));
 
