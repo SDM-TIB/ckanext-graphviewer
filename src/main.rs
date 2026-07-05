@@ -148,6 +148,7 @@ pub enum AppState {
 
 pub struct AppConfig {
     pub api_url: String,
+    pub ckan_url: String,
     pub is_global_viewer: bool,
     pub rows_per_page: usize,
 }
@@ -198,13 +199,24 @@ struct App {
 
 #[cfg(target_arch = "wasm32")]
 pub fn get_dynamic_api_url() -> String {
+    let mut api_port = String::from("");
+
     if let Some(window) = web_sys::window() {
         let location = window.location();
+        let document = window.document();
+
+        if let Some(canvas) = document.expect("Failed to read canvas id").get_element_by_id("the_canvas_id") {
+            if let Some(port) = canvas.get_attribute("api_port") {
+                if !port.is_empty() {
+                    api_port = port;
+                }
+            }
+        }
 
         // Extract the protocol (e.g., "http:") and hostname (e.g., "192.168.1.50" or "example.com")
         if let (Ok(protocol), Ok(hostname)) = (location.protocol(), location.hostname()) {
             // Construct the target URL pointing to your Python FastAPI port
-            return format!("{}//{}:5742", protocol, hostname);
+            return format!("{}//{}:{}", protocol, hostname, api_port);
         }
     }
     // Fallback if browser APIs fail
@@ -271,6 +283,8 @@ impl App {
 
         let api_url = get_dynamic_api_url();
 
+        let ckan_url = get_dynamic_ckan_url();
+
         #[cfg(target_arch = "wasm32")]
         let n3_target_url = get_n3_url_from_dom();
         #[cfg(not(target_arch = "wasm32"))]
@@ -332,6 +346,7 @@ impl App {
         Self {
             config: AppConfig {
                 api_url: api_url,
+                ckan_url: ckan_url,
                 is_global_viewer: is_global_viewer,
                 rows_per_page: 100,
             },
