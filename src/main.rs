@@ -195,6 +195,29 @@ struct App {
     pub ui: UIState,
 }
 
+// --- DYNAMIC URL RESOLVER ---
+
+#[cfg(target_arch = "wasm32")]
+pub fn get_dynamic_api_url() -> String {
+    if let Some(window) = web_sys::window() {
+        let location = window.location();
+
+        // Extract the protocol (e.g., "http:") and hostname (e.g., "192.168.1.50" or "example.com")
+        if let (Ok(protocol), Ok(hostname)) = (location.protocol(), location.hostname()) {
+            // Construct the target URL pointing to your Python FastAPI port
+            return format!("{}//{}:5742", protocol, hostname);
+        }
+    }
+    // Fallback if browser APIs fail
+    "http://127.0.0.1:5742".to_string()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn get_dynamic_api_url() -> String {
+    // Native desktop apps run locally, so they point to the local API
+    "http://127.0.0.1:5742".to_string()
+}
+
 #[cfg(target_arch = "wasm32")]
 fn get_api_url_from_dom() -> Option<String> {
     let window = web_sys::window()?;
@@ -234,59 +257,6 @@ fn get_n3_url_from_dom() -> Option<String> {
     None
 }
 
-// wasm png export
-#[cfg(target_arch = "wasm32")]
-fn trigger_wasm_canvas_download(rect: egui::Rect, ppp: f32, filename: &str) {
-    use wasm_bindgen::JsCast;
-
-    let window = web_sys::window().unwrap();
-    let document = window.document().unwrap();
-
-    if let Some(main_canvas_elem) = document.get_element_by_id("the_canvas_id") {
-        if let Ok(main_canvas) = main_canvas_elem.dyn_into::<web_sys::HtmlCanvasElement>() {
-            let sx = (rect.min.x * ppp).round() as f64;
-            let sy = (rect.min.y * ppp).round() as f64;
-            let s_width = (rect.width() * ppp).round() as f64;
-            let s_height = (rect.height() * ppp).round() as f64;
-
-            if s_width > 0.0 && s_height > 0.0 {
-                if let Ok(temp_canvas_elem) = document.create_element("canvas") {
-                    if let Ok(temp_canvas) = temp_canvas_elem.dyn_into::<web_sys::HtmlCanvasElement>() {
-                        temp_canvas.set_width(s_width as u32);
-                        temp_canvas.set_height(s_height as u32);
-
-                        if let Ok(Some(ctx_obj)) = temp_canvas.get_context("2d") {
-                            if let Ok(ctx) = ctx_obj.dyn_into::<web_sys::CanvasRenderingContext2d>() {
-                                let _ = ctx.draw_image_with_html_canvas_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
-                                    &main_canvas,
-                                    sx,
-                                    sy,
-                                    s_width,
-                                    s_height,
-                                    0.0,
-                                    0.0,
-                                    s_width,
-                                    s_height,
-                                );
-
-                                if let Ok(data_url) = temp_canvas.to_data_url_with_type("image/png") {
-                                    if let Ok(a) = document.create_element("a") {
-                                        a.set_attribute("href", &data_url).unwrap();
-                                        a.set_attribute("download", filename).unwrap();
-                                        if let Ok(html_a) = a.dyn_into::<web_sys::HtmlElement>() {
-                                            html_a.click();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.global_style_mut(|style| {
@@ -303,10 +273,7 @@ impl App {
 
         let state = Arc::new(Mutex::new(AppState::Loading));
 
-        #[cfg(target_arch = "wasm32")]
-        let api_url = get_api_url_from_dom().unwrap_or_else(|| "http://0.0.0.0:5742".to_string());
-        #[cfg(not(target_arch = "wasm32"))]
-        let api_url = "http://0.0.0.0:5742".to_string();
+        let api_url = get_dynamic_api_url();
 
         #[cfg(target_arch = "wasm32")]
         let ckan_api_url = get_ckan_api_url_from_dom().unwrap_or_else(|| "https://service.tib.eu/ldmservice/api/3".to_string());
@@ -545,42 +512,39 @@ impl eframe::App for App {
                                     let filename = format!("LDM_graph_export_{}.svg", timestamp);
                                     let svg_data = crate::export::generate_svg(nodes, edges, &self.ui.theme);
                                     crate::export::save_file(&filename, &svg_data, "image/svg+xml");
-                                    ui.close_menu();
+                                    ui.close();
                                 }
 
                                 if ui.button("Export as PNG").clicked() {
                                     let filename = format!("LDM_graph_export_{}.png", timestamp);
-
                                     let svg_data = crate::export::generate_svg(nodes, edges, &self.ui.theme);
 
                                     #[cfg(target_arch = "wasm32")]
                                     {
-                                        // Use the browser's native engine to render the SVG to a crisp PNG
                                         crate::export::save_png_from_svg_web(&svg_data, &filename);
                                         log::info!("Triggered WASM SVG-to-PNG download");
                                     }
 
                                     #[cfg(not(target_arch = "wasm32"))]
                                     {
-                                        let svg_data = crate::export::generate_svg(nodes, edges, &self.ui.theme);
                                         crate::export::save_png_from_svg(&svg_data, &filename);
                                     }
 
-                                    ui.close_menu();
+                                    ui.close();
                                 }
 
                                 if ui.button("Export as N3").clicked() {
                                     let filename = format!("LDM_graph_export_{}.n3", timestamp);
                                     let n3_data = crate::export::generate_n3(raw_triples);
                                     crate::export::save_file(&filename, &n3_data, "text/n3");
-                                    ui.close_menu();
+                                    ui.close();
                                 }
 
                                 if ui.button("Export as JSON").clicked() {
                                     let filename = format!("LDM_graph_export_{}.json", timestamp);
                                     let json_data = crate::export::generate_json(nodes, edges);
                                     crate::export::save_file(&filename, &json_data, "application/json");
-                                    ui.close_menu();
+                                    ui.close();
                                 }
                             });
                         });
