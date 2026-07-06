@@ -27,11 +27,13 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
         # show graph viewer with selection boxes
         def show_global_graph_viewer():
             api_port = os.environ.get('CKANEXT__GRAPHVIEWER__APIPORT')
+            api_ip = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP')
 
             return toolkit.render(
                 'package/graph_viewer.html',
                 extra_vars={
                     'api_port': api_port,
+                    'api_ip': api_ip,
                 }
             )
 

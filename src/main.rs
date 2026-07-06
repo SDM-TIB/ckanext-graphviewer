@@ -195,11 +195,10 @@ struct App {
     pub ui: UIState,
 }
 
-// --- DYNAMIC URL RESOLVER ---
-
 #[cfg(target_arch = "wasm32")]
-pub fn get_dynamic_api_url() -> String {
+pub fn get_api_url() -> String {
     let mut api_port = String::from("");
+    let mut api_ip = String::from("");
 
     if let Some(window) = web_sys::window() {
         let location = window.location();
@@ -207,25 +206,26 @@ pub fn get_dynamic_api_url() -> String {
 
         if let Some(canvas) = document.expect("Failed to read canvas id").get_element_by_id("the_canvas_id") {
             if let Some(port) = canvas.get_attribute("api_port") {
-                if !port.is_empty() {
-                    api_port = port;
+                if let Some(ip) = canvas.get_attribute("api_ip") {
+                    if !ip.is_empty() && !port.is_empty() {
+                        api_port = port;
+                        api_ip = ip;
+                    }
                 }
             }
         }
 
-        // Extract the protocol (e.g., "http:") and hostname (e.g., "192.168.1.50" or "example.com")
-        if let (Ok(protocol), Ok(hostname)) = (location.protocol(), location.hostname()) {
-            // Construct the target URL pointing to your Python FastAPI port
-            return format!("{}//{}:{}", protocol, hostname, api_port);
+        if let Ok(protocol) = location.protocol() {
+            return format!("{}//{}:{}", protocol, api_ip, api_port);
         }
     }
-    // Fallback if browser APIs fail
+    // fallback
     "http://127.0.0.1:5742".to_string()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn get_dynamic_api_url() -> String {
-    // Native desktop apps run locally, so they point to the local API
+pub fn get_api_url() -> String {
+    // assume local same ip api
     "http://127.0.0.1:5742".to_string()
 }
 
@@ -281,7 +281,7 @@ impl App {
 
         let state = Arc::new(Mutex::new(AppState::Loading));
 
-        let api_url = get_dynamic_api_url();
+        let api_url = get_api_url();
 
         let ckan_url = get_dynamic_ckan_url();
 
