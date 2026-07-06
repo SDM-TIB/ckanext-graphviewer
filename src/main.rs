@@ -396,7 +396,7 @@ impl App {
         // Hitting the CKAN endpoint directly for suggestions
         let request = ehttp::Request::get(format!(
             "{}/api/3/action/package_search{}",
-            self.config.api_url,
+            self.config.ckan_url,
             query_string
         ));
 
