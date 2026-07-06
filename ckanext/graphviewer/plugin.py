@@ -26,7 +26,7 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
 
         # show graph viewer with selection boxes
         def show_global_graph_viewer():
-            api_port = os.environ.get('CKANEXT__GRAPHVEWER__APIPORT')
+            api_port = os.environ.get('CKANEXT__GRAPHVIEWER__APIPORT')
 
             return toolkit.render(
                 'package/graph_viewer.html',
