@@ -197,27 +197,26 @@ struct App {
 
 #[cfg(target_arch = "wasm32")]
 pub fn get_api_url() -> String {
-    let mut api_port = String::from("");
+    let mut api_protocol = String::from("");
     let mut api_ip = String::from("");
+    let mut api_port = String::from("");
 
     if let Some(window) = web_sys::window() {
-        let location = window.location();
         let document = window.document();
 
         if let Some(canvas) = document.expect("Failed to read canvas id").get_element_by_id("the_canvas_id") {
-            if let Some(port) = canvas.get_attribute("api_port") {
-                if let Some(ip) = canvas.get_attribute("api_ip") {
-                    if !ip.is_empty() && !port.is_empty() {
-                        api_port = port;
-                        api_ip = ip;
-                    }
-                }
+            let Some(protocol) = canvas.get_attribute("api_protocol") else { todo!() };
+            let Some(ip) = canvas.get_attribute("api_ip") else { todo!() };
+            let Some(port) = canvas.get_attribute("api_port") else { todo!() };
+
+            if !protocol.is_empty() && !ip.is_empty() && !port.is_empty(){
+                api_protocol = protocol;
+                api_ip = ip;
+                api_port = port;
             }
         }
 
-        if let Ok(protocol) = location.protocol() {
-            return format!("{}//{}:{}", protocol, api_ip, api_port);
-        }
+        return format!("{}//{}:{}", api_protocol, api_ip, api_port);
     }
     // fallback
     "http://127.0.0.1:5742".to_string()
