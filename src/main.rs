@@ -212,7 +212,7 @@ pub fn get_api_url() -> String {
                    !ip.is_empty() && ip != "None" &&
                    !port.is_empty() && port != "None"
                 {
-                    return format!("{}//{}:{}", protocol, ip, port);
+                    return format!("{}://{}:{}", protocol, ip, port);
                 }
             }
         }
