@@ -24,11 +24,11 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
         blueprint = Blueprint(u'graph_viewer', self.__module__,)
         blueprint.template_folder = u'templates'
 
-        # show graph viewer with selection boxes
         def show_global_graph_viewer():
-            api_protocol = os.environ.get('CKANEXT__GRAPHVIEWER__APIPROTOCOL')
-            api_ip = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP')
-            api_port = os.environ.get('CKANEXT__GRAPHVIEWER__APIPORT')
+            # Add '' as the second argument to default to an empty string instead of None
+            api_protocol = os.environ.get('CKANEXT__GRAPHVIEWER__APIPROTOCOL', '')
+            api_ip = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP', '')
+            api_port = os.environ.get('CKANEXT__GRAPHVIEWER__APIPORT', '')
 
             return toolkit.render(
                 'package/graph_viewer.html',
