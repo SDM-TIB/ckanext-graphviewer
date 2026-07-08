@@ -13,7 +13,7 @@
             api_port="{{ api_port }}"
             {% if pkg_dict %}
             data-pkg-dict="{{ pkg_dict | tojson | forceescape }}"
-            data-n3-url="{{ h.url_for('home', qualified=True) }}{{ pkg_type }}/{{ pkg_dict.name }}.n3"
+            data-n3="{{ pkg_dict.name }}.n3"
             {% endif %}
         ></canvas>
     </div>

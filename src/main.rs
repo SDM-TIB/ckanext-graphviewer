@@ -29,7 +29,7 @@ pub struct CkanResult {
 #[derive(Deserialize, Debug)]
 pub struct CkanDataset {
     pub author: Option<String>,
-    pub title: Option<String>, // Added to capture dataset titles!
+    pub title: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -250,18 +250,26 @@ pub fn get_dynamic_ckan_url() -> String {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn get_n3_url_from_dom() -> Option<String> {
+pub fn get_n3_url_from_dom() -> Option<String> {
     let window = web_sys::window()?;
     let document = window.document()?;
+    let location = window.location();
+    let canvas = document.get_element_by_id("the_canvas_id")?;
+    let n3_path = canvas.get_attribute("data-n3")?;
+    let mut origin = String::from("");
 
-    if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
-        if let Some(url) = canvas.get_attribute("data-n3-url") {
-            if !url.is_empty() {
-                return Some(url);
-            }
-        }
+    if n3_path.starts_with("http://") || n3_path.starts_with("https://") {
+        return Some(n3_path);
     }
-    None
+
+    if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
+        // Construct the target URL pointing to your Python FastAPI port
+        origin = format!("{}//{}:{}", protocol, hostname, port);
+    }
+
+    let clean_path = n3_path.trim_start_matches('/');
+
+    Some(format!("{}/{}", origin, clean_path))
 }
 
 impl App {

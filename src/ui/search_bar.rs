@@ -34,7 +34,7 @@ impl App {
 
         // main element
         ui.horizontal(|ui| {
-            // the element has a hight of 19 pixel from the top the seperator HACK for consitency
+            // the element has a hight of 19 pixel from the top the seperator HACK for consistency
             ui.spacing_mut().interact_size.y = 19.0;
 
             ui.label("Select a start point:");
@@ -228,9 +228,7 @@ impl App {
                     SearchType::PaperTitle => format!("{}/get_dataset_information_by_paper_title?paper_title={}", base_url, input),
                     SearchType::DatasetDoi => format!("{}/get_dataset_information_by_dataset_doi?dataset_doi={}", base_url, input),
                     SearchType::DatasetTitle => format!("{}/get_dataset_information_by_dataset_title?dataset_title={}", base_url, input),
-                    SearchType::DatasetLdmId => {
-                        format!("{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id={}", base_url, input)
-                    }
+                    SearchType::DatasetLdmId => format!("{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id={}", base_url, input)
                 };
 
                 let request = ehttp::Request::get(&target_url);
