@@ -1,5 +1,6 @@
 use crate::{App, SearchType};
 use eframe::egui;
+use log::info;
 
 /* the search bar is on its own just one ui.horizontal element which
   houses a label a combobox and a text edit and a button as well as the progressinfo label
@@ -219,6 +220,8 @@ impl App {
                 let failed_clone = self.search.search_failed.clone();
                 let fetching_clone = self.search.is_fetching.clone();
                 let base_url = self.config.api_url.clone();
+
+                info!("base_url: {}", base_url);
 
                 let target_url = match search_type {
                     SearchType::AuthorName => format!("{}/get_dataset_information_by_author_name?author_name={}", base_url, input),
