@@ -204,9 +204,9 @@ pub fn get_api_url() -> String {
                 let ip = canvas.get_attribute("api_ip").unwrap_or_default();
                 let port = canvas.get_attribute("api_port").unwrap_or_default();
 
-                info!("proto: {}", protocol);
-                info!("ip: {}", ip);
-                info!("port: {}", port);
+                // info!("proto: {}", protocol);
+                // info!("ip: {}", ip);
+                // info!("port: {}", port);
 
                 if !protocol.is_empty() && protocol != "None" &&
                    !ip.is_empty() && ip != "None" &&

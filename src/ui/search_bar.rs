@@ -209,7 +209,7 @@ impl App {
             let start_point_confirm_button = egui::Button::new("Confirm");
 
             if ui.add_enabled(!is_currently_fetching, start_point_confirm_button).clicked() {
-                log::info!("Requested Fetch! Type: {}, Input: {}", self.search.search_type.as_str(), self.search.search_input);
+                // log::info!("Requested Fetch! Type: {}, Input: {}", self.search.search_type.as_str(), self.search.search_input);
                 *self.search.search_failed.lock().unwrap() = false;
                 *self.search.is_fetching.lock().unwrap() = true;
 
@@ -221,7 +221,7 @@ impl App {
                 let fetching_clone = self.search.is_fetching.clone();
                 let base_url = self.config.api_url.clone();
 
-                info!("base_url: {}", base_url);
+                // info!("base_url: {}", base_url);
 
                 let target_url = match search_type {
                     SearchType::AuthorName => format!("{}/get_dataset_information_by_author_name?author_name={}", base_url, input),
