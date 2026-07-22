@@ -268,7 +268,7 @@ pub fn get_n3_url_from_dom() -> Option<String> {
 
     let clean_path = n3_path.trim_start_matches('/');
 
-    Some(format!("{}/{}", origin, clean_path))
+    Some(format!("{}/dataset/{}", origin, clean_path))
 }
 
 impl App {
