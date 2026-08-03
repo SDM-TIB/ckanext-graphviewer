@@ -26,16 +26,12 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
 
         def show_global_graph_viewer():
             # Add '' as the second argument to default to an empty string instead of None
-            api_protocol = os.environ.get('CKANEXT__GRAPHVIEWER__APIPROTOCOL', '')
-            api_ip = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP', '')
-            api_port = os.environ.get('CKANEXT__GRAPHVIEWER__APIPORT', '')
+            api_ip_subpath = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP__SUBPATH', '')
 
             return toolkit.render(
                 'package/graph_viewer.html',
                 extra_vars={
-                    'api_protocol': api_protocol,
-                    'api_ip': api_ip,
-                    'api_port': api_port,
+                    'api_ip_subpath': api_ip_subpath,
                 }
             )
 

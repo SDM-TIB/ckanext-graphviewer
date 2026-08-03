@@ -198,26 +198,34 @@ struct App {
 #[cfg(target_arch = "wasm32")]
 pub fn get_api_url() -> String {
     if let Some(window) = web_sys::window() {
+        let location = window.location();
+
+        let mut root_path = String::new();
+        let mut sub_path = String::new();
+
         if let Some(document) = window.document() {
             if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
-                let protocol = canvas.get_attribute("api_protocol").unwrap_or_default();
-                let ip = canvas.get_attribute("api_ip").unwrap_or_default();
-                let port = canvas.get_attribute("api_port").unwrap_or_default();
-
-                // info!("proto: {}", protocol);
-                // info!("ip: {}", ip);
-                // info!("port: {}", port);
-
-                if !protocol.is_empty() && protocol != "None" &&
-                   !ip.is_empty() && ip != "None" &&
-                   !port.is_empty() && port != "None"
-                {
-                    return format!("{}://{}:{}", protocol, ip, port);
+                if let Some(path) = canvas.get_attribute("root-path") {
+                    root_path = path;
+                }
+                if let Some(path) = canvas.get_attribute("api-ip-subpath") {
+                    sub_path = path;
                 }
             }
         }
-    }
 
+        if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
+
+            let port_str = if port.is_empty() {
+                String::new()
+            } else {
+                format!(":{}", port)
+            };
+
+            return format!("{}//{}{}{}{}", protocol, hostname, port_str, root_path, sub_path);
+        }
+    }
+    // Fallback if browser APIs fail
     "http://127.0.0.1:5742".to_string()
 }
 
@@ -232,10 +240,26 @@ pub fn get_dynamic_ckan_url() -> String {
     if let Some(window) = web_sys::window() {
         let location = window.location();
 
-        // Extract the protocol (e.g., "http:") and hostname (e.g., "192.168.1.50" or "example.com")
+        let mut root_path = String::new();
+        if let Some(document) = window.document() {
+            if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
+                if let Some(path) = canvas.get_attribute("root-path") {
+                    root_path = path;
+                }
+            }
+        }
+
+        info!("root_path: {}", root_path);
+
         if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
-            // Construct the target URL pointing to your Python FastAPI port
-            return format!("{}//{}:{}", protocol, hostname, port);
+
+            let port_str = if port.is_empty() {
+                String::new()
+            } else {
+                format!(":{}", port)
+            };
+
+            return format!("{}//{}{}{}", protocol, hostname, port_str, root_path);
         }
     }
     // Fallback if browser APIs fail
@@ -261,6 +285,15 @@ pub fn get_n3_url_from_dom() -> Option<String> {
         return Some(n3_path);
     }
 
+    let mut root_path = String::new();
+    if let Some(document) = window.document() {
+        if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
+            if let Some(path) = canvas.get_attribute("root-path") {
+                root_path = format!("{}", path);
+            }
+        }
+    }
+
     if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
         // Construct the target URL pointing to your Python FastAPI port
         origin = format!("{}//{}:{}", protocol, hostname, port);
@@ -268,7 +301,7 @@ pub fn get_n3_url_from_dom() -> Option<String> {
 
     let clean_path = n3_path.trim_start_matches('/');
 
-    Some(format!("{}/dataset/{}", origin, clean_path))
+    Some(format!("{}{}/dataset/{}", origin, root_path, clean_path))
 }
 
 impl App {
