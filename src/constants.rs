@@ -4,6 +4,7 @@ pub const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 pub const TYPE_AUTHOR: &str = "http://purl.org/spar/pro/Author";
 pub const TYPE_DATASET: &str = "http://www.w3.org/ns/dcat#Dataset";
 pub const TYPE_DATASERVICE: &str = "http://www.w3.org/ns/dcat#DataService";
+pub const TYPE_CONCEPT: &str = "http://www.w3.org/2004/02/skos/core#Concept";
 
 // Predicates
 pub const PRED_CREATOR: &str = "creator";

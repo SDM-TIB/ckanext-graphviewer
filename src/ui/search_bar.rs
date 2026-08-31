@@ -100,7 +100,9 @@ impl App {
                 }
             }
 
-            let mut filtered_suggestions: Vec<String> = self.search.found_strings
+            let mut filtered_suggestions: Vec<String> = self
+                .search
+                .found_strings
                 .iter()
                 .filter(|word| {
                     let s_lower = word.name.to_lowercase();
@@ -123,7 +125,8 @@ impl App {
                 // keyboard navigation
                 if ui.input(|i| i.key_pressed(egui::Key::ArrowDown)) {
                     self.search.highlighted_index = self
-                        .search.highlighted_index
+                        .search
+                        .highlighted_index
                         .saturating_add(1)
                         .min(filtered_suggestions.len().saturating_sub(1));
                 }
@@ -231,7 +234,7 @@ impl App {
                     SearchType::PaperTitle => format!("{}/get_dataset_information_by_paper_title?paper_title={}", base_url, input),
                     SearchType::DatasetDoi => format!("{}/get_dataset_information_by_dataset_doi?dataset_doi={}", base_url, input),
                     SearchType::DatasetTitle => format!("{}/get_dataset_information_by_dataset_title?dataset_title={}", base_url, input),
-                    SearchType::DatasetLdmId => format!("{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id={}", base_url, input)
+                    SearchType::DatasetLdmId => format!("{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id={}", base_url, input),
                 };
 
                 let request = ehttp::Request::get(&target_url);

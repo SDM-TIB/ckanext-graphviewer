@@ -78,21 +78,22 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     // --- Define Half-Arrow Markers ---
     svg.push_str("  <defs>\n");
     // Right-pointing half arrow (Inverted to M 0 10 so it always pairs correctly)
-    svg.push_str("    <marker id=\"arrow-end\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n");
+    svg.push_str(
+        "    <marker id=\"arrow-end\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n",
+    );
     svg.push_str(&format!("      <path d=\"M 0 10 L 10 5 L 0 5 z\" fill=\"{}\" />\n", edge_color));
     svg.push_str("    </marker>\n");
 
     // Left-pointing half arrow
-    svg.push_str("    <marker id=\"arrow-start\" viewBox=\"0 0 10 10\" refX=\"2\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n");
+    svg.push_str(
+        "    <marker id=\"arrow-start\" viewBox=\"0 0 10 10\" refX=\"2\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n",
+    );
     svg.push_str(&format!("      <path d=\"M 10 0 L 0 5 L 10 5 z\" fill=\"{}\" />\n", edge_color));
     svg.push_str("    </marker>\n");
     svg.push_str("  </defs>\n");
 
     // Explicitly draw a solid background rectangle
-    svg.push_str(&format!(
-        "  <rect width=\"100%\" height=\"100%\" fill=\"{}\" />\n",
-        bg_color
-    ));
+    svg.push_str(&format!("  <rect width=\"100%\" height=\"100%\" fill=\"{}\" />\n", bg_color));
 
     // ==========================================
     // --- GRAPH AREA (Left Side) ---
@@ -118,7 +119,9 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         let dy = y2 - y1;
         let dist = (dx * dx + dy * dy).sqrt();
 
-        if dist < 0.1 { continue; }
+        if dist < 0.1 {
+            continue;
+        }
 
         let ux = dx / dist;
         let uy = dy / dist;
@@ -130,7 +133,11 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         let end_x = x2 - ux * offset;
         let end_y = y2 - uy * offset;
 
-        let marker_start = if edge.bidirectional { " marker-start=\"url(#arrow-start)\"" } else { "" };
+        let marker_start = if edge.bidirectional {
+            " marker-start=\"url(#arrow-start)\""
+        } else {
+            ""
+        };
         let marker_end = " marker-end=\"url(#arrow-end)\"";
 
         // Wrap the line in a transparency group to prevent overlap seams with the markers
@@ -180,15 +187,9 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
 
             for (i, lbl) in labels.iter().enumerate() {
                 if i == 0 {
-                    svg_out.push_str(&format!(
-                        "      <tspan x=\"0\" y=\"{:.1}\">{}</tspan>\n",
-                        start_y, lbl
-                    ));
+                    svg_out.push_str(&format!("      <tspan x=\"0\" y=\"{:.1}\">{}</tspan>\n", start_y, lbl));
                 } else {
-                    svg_out.push_str(&format!(
-                        "      <tspan x=\"0\" dy=\"{:.1}\">{}</tspan>\n",
-                        line_height, lbl
-                    ));
+                    svg_out.push_str(&format!("      <tspan x=\"0\" dy=\"{:.1}\">{}</tspan>\n", line_height, lbl));
                 }
             }
             svg_out.push_str("    </text>\n");
@@ -397,25 +398,23 @@ pub fn save_png_from_svg_web(svg_data: &str, filename: &str) {
     "#;
 
     let func = js_sys::Function::new_with_args("svgString, filename", js_code);
-    let _ = func.call2(
-        &JsValue::NULL,
-        &JsValue::from_str(svg_data),
-        &JsValue::from_str(filename),
-    );
+    let _ = func.call2(&JsValue::NULL, &JsValue::from_str(svg_data), &JsValue::from_str(filename));
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn save_png_from_svg(svg_data: &str, filename: &str) {
     // resvg re-exports usvg and tiny_skia to prevent version conflicts
-    use resvg::usvg::{Options, Tree, fontdb};
     use resvg::tiny_skia::{Pixmap, Transform};
+    use resvg::usvg::{Options, Tree, fontdb};
 
     // 1. Load system fonts so the text in the SVG renders correctly
     let mut font_db = fontdb::Database::new();
     font_db.load_system_fonts();
 
     // Extract the name as an owned String to release the immutable borrow immediately
-    let fallback_family = font_db.faces().next()
+    let fallback_family = font_db
+        .faces()
+        .next()
         .and_then(|face| face.families.first())
         .map(|(name, _)| name.clone());
 
@@ -437,7 +436,6 @@ pub fn save_png_from_svg(svg_data: &str, filename: &str) {
             // 3. Create a pixel buffer matching the SVG's exact dimensions
             let size = tree.size().to_int_size();
             if let Some(mut pixmap) = Pixmap::new(size.width(), size.height()) {
-
                 // 4. Render the SVG mathematically into the pixel buffer
                 resvg::render(&tree, Transform::default(), &mut pixmap.as_mut());
 

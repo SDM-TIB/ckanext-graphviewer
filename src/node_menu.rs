@@ -1,5 +1,5 @@
 use crate::AppState;
-use crate::constants::{TYPE_AUTHOR, TYPE_DATASERVICE, TYPE_DATASET};
+use crate::constants::{TYPE_AUTHOR, TYPE_CONCEPT, TYPE_DATASERVICE, TYPE_DATASET};
 use crate::graph_processor::{Edge, Node};
 use crate::theme::Theme;
 use eframe::egui;
@@ -26,7 +26,7 @@ pub fn draw_radial_menu(
     let btn_radius = 12.0 * zoom;
 
     let current_type = nodes[menu_idx].rdf_type.clone();
-    let fetchable_types = vec![TYPE_AUTHOR, TYPE_DATASERVICE, TYPE_DATASET];
+    let fetchable_types = vec![TYPE_AUTHOR, TYPE_DATASERVICE, TYPE_DATASET, TYPE_CONCEPT];
 
     // determine if we need to fetch data
     let is_fetchable = fetchable_types.iter().any(|&t| current_type.contains(t));
@@ -70,6 +70,7 @@ pub fn draw_radial_menu(
             *show_menu = false;
             *selected_node = None;
             let clicked_node_id = nodes[menu_idx].id.clone();
+            let clicked_node_label = nodes[menu_idx].label.clone();
 
             if current_type.contains("http://purl.org/spar/pro/Author") {
                 crate::api_client::fetch_author_information(
@@ -82,7 +83,22 @@ pub fn draw_radial_menu(
             }
 
             if current_type.contains("http://www.w3.org/ns/dcat#DataService") || current_type.contains("http://www.w3.org/ns/dcat#Dataset") {
-                crate::api_client::fetch_dataset_information(ctx.clone(), state, clicked_node_id.clone(), clicked_node_id, api_url);
+                crate::api_client::fetch_dataset_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_id.clone(),
+                    api_url);
+            }
+
+            if current_type.contains(TYPE_CONCEPT) {
+                crate::api_client::fetch_keyword_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_label,
+                    api_url,
+                );
             }
         } else {
             // Execute Standard Expand/Collapse

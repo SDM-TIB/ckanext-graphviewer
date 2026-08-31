@@ -215,12 +215,7 @@ pub fn get_api_url() -> String {
         }
 
         if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
-
-            let port_str = if port.is_empty() {
-                String::new()
-            } else {
-                format!(":{}", port)
-            };
+            let port_str = if port.is_empty() { String::new() } else { format!(":{}", port) };
 
             return format!("{}//{}{}{}{}", protocol, hostname, port_str, root_path, sub_path);
         }
@@ -252,12 +247,7 @@ pub fn get_dynamic_ckan_url() -> String {
         info!("root_path: {}", root_path);
 
         if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
-
-            let port_str = if port.is_empty() {
-                String::new()
-            } else {
-                format!(":{}", port)
-            };
+            let port_str = if port.is_empty() { String::new() } else { format!(":{}", port) };
 
             return format!("{}//{}{}{}", protocol, hostname, port_str, root_path);
         }
@@ -433,11 +423,7 @@ impl App {
         );
 
         // Hitting the CKAN endpoint directly for suggestions
-        let request = ehttp::Request::get(format!(
-            "{}/api/3/action/package_search{}",
-            self.config.ckan_url,
-            query_string
-        ));
+        let request = ehttp::Request::get(format!("{}/api/3/action/package_search{}", self.config.ckan_url, query_string));
 
         let tx = self.search.autocomplete_tx.clone();
         let search_type_clone = self.search.search_type.clone();

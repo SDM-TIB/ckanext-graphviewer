@@ -290,8 +290,8 @@ impl App {
 
         // draw node
         let mut clicked_to_expand = None;
-
         let mut dragged_node_delta = None;
+        let mut clicked_to_fetch = None;
 
         for (index, node) in nodes.iter().enumerate() {
             if !node.visible {
@@ -319,7 +319,19 @@ impl App {
 
             // left double click / left click
             if response.double_clicked() {
-                clicked_to_expand = Some(index);
+                let is_fetchable = node.rdf_type.contains(crate::constants::TYPE_AUTHOR)
+                    || node.rdf_type.contains(crate::constants::TYPE_DATASERVICE)
+                    || node.rdf_type.contains(crate::constants::TYPE_DATASET)
+                    || node.rdf_type.contains(crate::constants::TYPE_CONCEPT);
+
+                let needs_fetch = is_fetchable && !node.api_fetched;
+
+                if needs_fetch {
+                    clicked_to_fetch = Some(index);
+                } else {
+                    clicked_to_expand = Some(index);
+                }
+
                 self.ui.selected_node = None;
                 self.ui.pending_click_node = None;
             } else if response.clicked() {
@@ -405,7 +417,11 @@ impl App {
                     node.label.clone()
                 };
 
-                let galley = painter.layout_no_wrap(display_text.to_string(), egui::FontId::proportional(font_size), self.ui.theme.text_fg);
+                let galley = painter.layout_no_wrap(
+                    display_text.to_string(),
+                    egui::FontId::proportional(font_size),
+                    self.ui.theme.text_fg,
+                );
 
                 let text_pos = screen_pos + egui::vec2(0.0, 20.0 * self.ui.zoom);
                 let text_rect = egui::Align2::CENTER_TOP.anchor_rect(egui::Rect::from_min_size(text_pos, galley.size()));
@@ -516,6 +532,42 @@ impl App {
                     nodes[target_idx].visible = true;
                     edges[edge_idx].visible = true;
                 }
+            }
+        }
+
+        if let Some(fetch_idx) = clicked_to_fetch {
+            let clicked_node_id = nodes[fetch_idx].id.clone();
+            let clicked_node_label = nodes[fetch_idx].label.clone();
+            let current_type = nodes[fetch_idx].rdf_type.clone();
+            let api_url = self.config.api_url.clone();
+            let state = self.graph_data.clone();
+
+            if current_type.contains(crate::constants::TYPE_AUTHOR) {
+                crate::api_client::fetch_author_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_id.clone(),
+                    &api_url,
+                );
+            }
+            if current_type.contains(crate::constants::TYPE_DATASERVICE) || current_type.contains(crate::constants::TYPE_DATASET) {
+                crate::api_client::fetch_dataset_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_id.clone(),
+                    &api_url,
+                );
+            }
+            if current_type.contains(crate::constants::TYPE_CONCEPT) {
+                crate::api_client::fetch_keyword_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_label,
+                    &api_url,
+                );
             }
         }
     }
