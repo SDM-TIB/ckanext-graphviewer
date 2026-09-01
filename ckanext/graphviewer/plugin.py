@@ -25,7 +25,6 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
         blueprint.template_folder = u'templates'
 
         def show_global_graph_viewer():
-            # Add '' as the second argument to default to an empty string instead of None
             api_ip_subpath = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP__SUBPATH', '')
 
             return toolkit.render(
@@ -35,14 +34,13 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
                 }
             )
 
-        # show graph viewer without selection boxes and a starting with a dataset
         def show_dataset_graph_viewer(_type, _id):
             try:
                 pkg_dict = toolkit.get_action('package_show')({}, {'id': _id})
             except toolkit.ObjectNotFound:
                 toolkit.abort(404, 'Dataset not found')
 
-            api_url = os.environ.get('LDM_KNOWLEDGE_GRAPH_EXPLORATION_API')
+            api_ip_subpath = os.environ.get('CKANEXT__GRAPHVIEWER__APIIP__SUBPATH', '')
 
             # Render the template and pass the dataset metadata
             return toolkit.render(
@@ -50,7 +48,7 @@ class GraphViewerPlugin(plugins.SingletonPlugin):
                 extra_vars={
                     'pkg_dict': pkg_dict,
                     'pkg_type': _type,
-                    'api_url': api_url,
+                    'api_ip_subpath': api_ip_subpath,
                 }
             )
 
