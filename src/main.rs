@@ -294,6 +294,17 @@ pub fn get_n3_url_from_dom() -> Option<String> {
     Some(format!("{}{}/dataset/{}", origin, root_path, clean_path))
 }
 
+/// Formats "Lastname, Firstname" into "Firstname Lastname"
+pub fn format_author_name(raw_name: &str) -> String {
+    let parts: Vec<&str> = raw_name.split(',').collect();
+    if parts.len() == 2 {
+        let last_name = parts[0].trim();
+        let first_name = parts[1].trim();
+        return format!("{} {}", first_name, last_name);
+    }
+    raw_name.trim().to_string()
+}
+
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.global_style_mut(|style| {
@@ -436,7 +447,8 @@ impl App {
                         // 2. Extract the correct field from the JSON response
                         if search_type_clone == SearchType::AuthorName {
                             if let Some(val) = dataset.author {
-                                new_results.push(FoundString { name: val });
+                                let cleaned_name = crate::format_author_name(&val);
+                                new_results.push(FoundString { name: cleaned_name });
                             }
                         } else if search_type_clone == SearchType::DatasetTitle {
                             if let Some(val) = dataset.title {
