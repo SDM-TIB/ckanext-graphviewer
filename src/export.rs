@@ -329,8 +329,8 @@ pub fn save_file(filename: &str, content: &str, mime_type: &str) {
         if let Some(document) = window.document() {
             let array = js_sys::Array::new();
             array.push(&wasm_bindgen::JsValue::from_str(content));
-            let mut options = web_sys::BlobPropertyBag::new();
-            options.type_(mime_type);
+            let options = web_sys::BlobPropertyBag::new();
+            options.set_type(mime_type);
             if let Ok(blob) = web_sys::Blob::new_with_str_sequence_and_options(&array, &options) {
                 if let Ok(url) = web_sys::Url::create_object_url_with_blob(&blob) {
                     if let Ok(a) = document.create_element("a") {

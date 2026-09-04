@@ -204,7 +204,7 @@ impl Theme {
         visuals.widgets.open.weak_bg_fill = self.button_active_bg;
 
         // 3. Sync widget FOREGROUND (Text) states
-        let default_text_stroke = Stroke::new(1.0, self.text_fg);
+        let default_text_stroke = Stroke::new(1.0_f32, self.text_fg);
         visuals.widgets.noninteractive.fg_stroke = default_text_stroke; // Standard ui.label()
         visuals.widgets.inactive.fg_stroke = default_text_stroke; // Standard button text
         visuals.widgets.hovered.fg_stroke = default_text_stroke; // Hovered button text
@@ -214,14 +214,14 @@ impl Theme {
         // 4. Specialized Colors and Strokes
         visuals.error_fg_color = self.error_fg;
         visuals.warn_fg_color = self.error_fg;
-        visuals.window_stroke = Stroke::new(1.0, self.edge_fg);
+        visuals.window_stroke = Stroke::new(1.0_f32, self.edge_fg);
 
         // 5. Selection (Highlights & Active Tabs)
         visuals.selection.bg_fill = self.menu_expand_bg;
-        visuals.selection.stroke = Stroke::new(1.0, self.text_fg);
+        visuals.selection.stroke = Stroke::new(1.0_f32, self.text_fg);
 
         // The blinking cursor in the search bar
-        visuals.text_cursor.stroke = eframe::egui::Stroke::new(2.0, self.text_fg);
+        visuals.text_cursor.stroke = eframe::egui::Stroke::new(2.0_f32, self.text_fg);
 
         // Hyperlinks (We'll borrow your blue/red expand button color as an accent!)
         visuals.hyperlink_color = self.menu_expand_bg;
@@ -230,7 +230,7 @@ impl Theme {
         visuals.code_bg_color = self.button_bg;
 
         // Widget Borders (The outline around buttons and the search bar)
-        let default_border = eframe::egui::Stroke::new(1.0, self.edge_fg);
+        let default_border = eframe::egui::Stroke::new(1.0_f32, self.edge_fg);
         visuals.widgets.noninteractive.bg_stroke = default_border;
         visuals.widgets.inactive.bg_stroke = default_border;
         visuals.widgets.hovered.bg_stroke = default_border;

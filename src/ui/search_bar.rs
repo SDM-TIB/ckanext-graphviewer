@@ -65,7 +65,7 @@ impl App {
             let is_failed = *self.search.search_failed.lock().unwrap();
 
             if is_failed {
-                let error_stroke = egui::Stroke::new(1.5, self.ui.theme.error_fg);
+                let error_stroke = egui::Stroke::new(1.5_f32, self.ui.theme.error_fg);
                 ui.visuals_mut().widgets.inactive.bg_stroke = error_stroke;
                 ui.visuals_mut().widgets.hovered.bg_stroke = error_stroke;
                 ui.visuals_mut().widgets.active.bg_stroke = error_stroke;

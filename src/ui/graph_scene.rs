@@ -111,7 +111,7 @@ impl App {
             .fill(self.ui.theme.button_bg)
             .inner_margin(3.0)
             .corner_radius(5.0)
-            .stroke(egui::Stroke::new(2.0, self.ui.theme.master_bg));
+            .stroke(egui::Stroke::new(2.0_f32, self.ui.theme.master_bg));
 
         // render legend
         egui::Window::new(egui::RichText::new("Legend").color(self.ui.theme.text_fg))
@@ -124,7 +124,7 @@ impl App {
                 egui::Frame::NONE
                     .inner_margin(5.0)
                     .corner_radius(5.0)
-                    .stroke(egui::Stroke::new(1.0, self.ui.theme.edge_fg))
+                    .stroke(egui::Stroke::new(1.0_f32, self.ui.theme.edge_fg))
                     .fill(self.ui.theme.master_bg)
                     .show(ui, |ui| {
                         egui::Grid::new("legend_grid").num_columns(2).spacing([10.0, 8.0]).show(ui, |ui| {
