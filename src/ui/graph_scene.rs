@@ -18,7 +18,10 @@ impl App {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let reset_view_button =
                     egui::Button::new(egui::RichText::new("Reset View").color(self.ui.theme.text_fg)).fill(self.ui.theme.button_bg);
-                if ui.add(reset_view_button).clicked() {
+                if ui.add(reset_view_button)
+                    .on_hover_text("Reset the graph view to the initial snapshot")
+                    .clicked()
+                {
                     self.ui.zoom = 1.0;
                     self.ui.pan = egui::vec2(0.0, 0.0);
                     self.ui.selected_node = None;

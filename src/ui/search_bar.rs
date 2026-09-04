@@ -45,12 +45,17 @@ impl App {
                 .show_ui(ui, |ui| {
                     let mut changed = false;
                     for st in SearchType::all() {
-                        if ui.selectable_value(&mut self.search.search_type, st.clone(), st.as_str()).changed() {
+                        if ui.selectable_value(&mut self.search.search_type, st.clone(), st.as_str())
+                            .on_hover_text(format!("Search using the {}", st.as_str()))
+                            .changed()
+                        {
                             changed = true;
                         }
                     }
                     changed
                 });
+
+            combo_response.response.on_hover_text("Open a window to select the type of identifier or name to search by");
 
             if combo_response.inner.unwrap_or(false) {
                 self.search.search_input.clear();
@@ -66,7 +71,11 @@ impl App {
                 ui.visuals_mut().widgets.active.bg_stroke = error_stroke;
             }
 
-            let text_response = ui.add(egui::TextEdit::singleline(&mut self.search.search_input).desired_width(300.0));
+            let text_response = ui.add(
+                egui::TextEdit::singleline(&mut self.search.search_input)
+                    .hint_text("Enter search term...")
+                    .desired_width(300.0)
+            );
 
             if text_response.changed() && is_failed {
                 *self.search.search_failed.lock().unwrap() = false;
@@ -211,7 +220,9 @@ impl App {
 
             let start_point_confirm_button = egui::Button::new("Confirm");
 
-            if ui.add_enabled(!is_currently_fetching, start_point_confirm_button).clicked() {
+            if ui.add_enabled(!is_currently_fetching, start_point_confirm_button)
+                .on_hover_text("Build the graph from the entered information")
+                .clicked() {
                 // log::info!("Requested Fetch! Type: {}, Input: {}", self.search.search_type.as_str(), self.search.search_input);
                 *self.search.search_failed.lock().unwrap() = false;
                 *self.search.is_fetching.lock().unwrap() = true;

@@ -33,7 +33,7 @@ impl App {
                 let target_width = ui.available_width() - 0.0;
                 let default_height = ui.spacing().interact_size.y;
 
-                let button_response = ui.add_sized([target_width, default_height], egui::Button::new(selected_label));
+                let button_response = ui.add_sized([target_width, default_height], egui::Button::new(selected_label)).on_hover_text("Open a window to search for a specific node");
 
                 if button_response.clicked() {
                     is_open = !is_open;

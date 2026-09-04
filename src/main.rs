@@ -352,7 +352,7 @@ impl App {
                     Ok(res) => {
                         if let Some(text) = res.text() {
                             let raw_triples = parser::parse_n3_file(&text);
-                            let (nodes, edges) = graph_processor::build_ui_graph(raw_triples.clone());
+                            let (nodes, edges) = graph_processor::build_ui_graph(raw_triples.clone(), None);
                             let init_snapshot = GraphSnapshot::new(&nodes, &edges);
 
                             *state_guard_clone.lock().unwrap() = AppState::Ready {
@@ -404,8 +404,8 @@ impl App {
                 current_offset: 0,
             },
             ui: UIState {
-                theme: Theme::dark(),
-                theme_mode: ThemeMode::Dark,
+                theme: if is_system_dark { Theme::dark() } else { Theme::light() },
+                theme_mode: if is_system_dark { ThemeMode::Dark } else { ThemeMode::Light },
                 current_scene: Scene::Graph,
                 zoom: 1.0,
                 pan: egui::vec2(0.0, 0.0),
@@ -497,7 +497,12 @@ impl eframe::App for App {
                         } else {
                             self.ui.theme.button_bg
                         };
-                        if ui.add(egui::Button::new("Graph View").fill(graph_bg)).clicked() {
+                        ui.label("Current View:");
+
+                        if ui.add(egui::Button::new("Graph View").fill(graph_bg))
+                            .on_hover_text("View the knowledge graph visually")
+                            .clicked()
+                        {
                             self.ui.current_scene = crate::Scene::Graph;
                         }
 
@@ -506,7 +511,10 @@ impl eframe::App for App {
                         } else {
                             self.ui.theme.button_bg
                         };
-                        if ui.add(egui::Button::new("Analytics View").fill(analytics_bg)).clicked() {
+                        if ui.add(egui::Button::new("Analytics View").fill(analytics_bg))
+                            .on_hover_text("View statistical analytics for the leaded data")
+                            .clicked()
+                        {
                             self.ui.current_scene = crate::Scene::Analytics;
                         }
 
@@ -515,7 +523,10 @@ impl eframe::App for App {
                         } else {
                             self.ui.theme.button_bg
                         };
-                        if ui.add(egui::Button::new("Node Inspector View").fill(inspector_bg)).clicked() {
+                        if ui.add(egui::Button::new("Node Inspector View").fill(inspector_bg))
+                            .on_hover_text("View a detailed, searchable list of all nodes and properties")
+                            .clicked()
+                        {
                             self.ui.current_scene = crate::Scene::NodeInspector;
                         }
 
@@ -529,7 +540,10 @@ impl eframe::App for App {
 
                             let theme_button = egui::Button::new(theme_string);
 
-                            if ui.add(theme_button).clicked() {
+                            if ui.add(theme_button)
+                                .on_hover_text("Toggle the application color theme")
+                                .clicked()
+                            {
                                 match self.ui.theme_mode {
                                     ThemeMode::Dark => {
                                         self.ui.theme_mode = ThemeMode::Light;
@@ -550,14 +564,20 @@ impl eframe::App for App {
                                 // Generate the ISO-like timestamp string
                                 let timestamp = chrono::Local::now().format("%Y-%m-%d_%H-%M").to_string();
 
-                                if ui.button("Export as SVG").clicked() {
+                                if ui.button("Export as SVG")
+                                    .on_hover_text("Download the current graph view as a SVG")
+                                    .clicked()
+                                {
                                     let filename = format!("LDM_graph_export_{}.svg", timestamp);
                                     let svg_data = crate::export::generate_svg(nodes, edges, &self.ui.theme);
                                     crate::export::save_file(&filename, &svg_data, "image/svg+xml");
                                     ui.close();
                                 }
 
-                                if ui.button("Export as PNG").clicked() {
+                                if ui.button("Export as PNG")
+                                    .on_hover_text("Download the current graph view as a PNG")
+                                    .clicked()
+                                {
                                     let filename = format!("LDM_graph_export_{}.png", timestamp);
                                     let svg_data = crate::export::generate_svg(nodes, edges, &self.ui.theme);
 
@@ -575,20 +595,26 @@ impl eframe::App for App {
                                     ui.close();
                                 }
 
-                                if ui.button("Export as N3").clicked() {
+                                if ui.button("Export as N3")
+                                    .on_hover_text("Download the raw knowledge graph data in N3")
+                                    .clicked()
+                                {
                                     let filename = format!("LDM_graph_export_{}.n3", timestamp);
                                     let n3_data = crate::export::generate_n3(raw_triples);
                                     crate::export::save_file(&filename, &n3_data, "text/n3");
                                     ui.close();
                                 }
 
-                                if ui.button("Export as JSON").clicked() {
+                                if ui.button("Export as JSON")
+                                    .on_hover_text("Download the graph data as spatial coordinates as JSON")
+                                    .clicked()
+                                {
                                     let filename = format!("LDM_graph_export_{}.json", timestamp);
                                     let json_data = crate::export::generate_json(nodes, edges);
                                     crate::export::save_file(&filename, &json_data, "application/json");
                                     ui.close();
                                 }
-                            });
+                            }).response.on_hover_text("Open a window to download information about the graph");
                         });
                     });
                     ui.separator();
