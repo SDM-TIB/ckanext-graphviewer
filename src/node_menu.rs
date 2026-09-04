@@ -1,5 +1,11 @@
 use crate::AppState;
-use crate::constants::{TYPE_AUTHOR, TYPE_CONCEPT, TYPE_DATASERVICE, TYPE_DATASET};
+use crate::constants::{
+    TYPE_AUTHOR,
+    TYPE_CONCEPT,
+    TYPE_DATASERVICE,
+    TYPE_DATASET,
+    TYPE_ORGANIZATION,
+};
 use crate::graph_processor::{Edge, Node};
 use crate::theme::Theme;
 use eframe::egui;
@@ -26,11 +32,11 @@ pub fn draw_radial_menu(
     let btn_radius = 12.0 * zoom;
 
     let current_type = nodes[menu_idx].rdf_type.clone();
-    let fetchable_types = vec![TYPE_AUTHOR, TYPE_DATASERVICE, TYPE_DATASET, TYPE_CONCEPT];
+    let fetchable_types = vec![TYPE_AUTHOR, TYPE_DATASERVICE, TYPE_DATASET, TYPE_CONCEPT, TYPE_ORGANIZATION];
 
     // determine if we need to fetch data
     let is_fetchable = fetchable_types.iter().any(|&t| current_type.contains(t));
-    let needs_fetch = is_fetchable && !nodes[menu_idx].api_fetched;
+    let needs_fetch = is_fetchable && (!nodes[menu_idx].api_fetched || nodes[menu_idx].has_more_to_fetch);
 
     // determine if any connected edges or nodes are hidden
     let has_hidden_connections = edges.iter().any(|e| {
@@ -43,8 +49,7 @@ pub fn draw_radial_menu(
         }
     });
 
-    // show a + if ta node has partially shown edges
-    let show_plus = needs_fetch || has_hidden_connections;
+    let show_plus = needs_fetch || has_hidden_connections || !nodes[menu_idx].expanded;
 
     // Angles for the 4 buttons (Top, Top-Right, Right, Bottom-Right)
     let angles = [
@@ -64,7 +69,7 @@ pub fn draw_radial_menu(
     let galley1 = painter.layout_no_wrap(icon1.into(), egui::FontId::proportional(16.0 * zoom), egui::Color32::WHITE);
     painter.galley(btn1_pos - galley1.size() / 2.0, galley1, egui::Color32::WHITE);
 
-    if btn1_resp.clicked() {
+if btn1_resp.clicked() {
         if needs_fetch {
             // Execute API Fetch
             *show_menu = false;
@@ -72,23 +77,28 @@ pub fn draw_radial_menu(
             let clicked_node_id = nodes[menu_idx].id.clone();
             let clicked_node_label = nodes[menu_idx].label.clone();
 
-            if current_type.contains("http://purl.org/spar/pro/Author") {
+            if current_type.contains(TYPE_AUTHOR) {
                 crate::api_client::fetch_author_information(
                     ctx.clone(),
                     state.clone(),
                     clicked_node_id.clone(),
                     clicked_node_id.clone(),
+                    nodes[menu_idx].fetch_offset,
+                    49,
                     api_url,
                 );
             }
 
-            if current_type.contains("http://www.w3.org/ns/dcat#DataService") || current_type.contains("http://www.w3.org/ns/dcat#Dataset") {
+            if current_type.contains(TYPE_DATASERVICE) || current_type.contains(TYPE_DATASET) {
                 crate::api_client::fetch_dataset_information(
                     ctx.clone(),
                     state.clone(),
                     clicked_node_id.clone(),
                     clicked_node_id.clone(),
-                    api_url);
+                    nodes[menu_idx].fetch_offset,
+                    49,
+                    api_url,
+                );
             }
 
             if current_type.contains(TYPE_CONCEPT) {
@@ -97,11 +107,25 @@ pub fn draw_radial_menu(
                     state.clone(),
                     clicked_node_id.clone(),
                     clicked_node_label,
+                    nodes[menu_idx].fetch_offset,
+                    49,
+                    api_url,
+                );
+            }
+
+            if current_type.contains(TYPE_ORGANIZATION) {
+                crate::api_client::fetch_publisher_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_id.clone(),
+                    nodes[menu_idx].fetch_offset,
+                    49,
                     api_url,
                 );
             }
         } else {
-            // Execute Standard Expand/Collapse
+            // Execute Standard Expand/Collapse locally without API calls
             nodes[menu_idx].expanded = !show_plus;
             *clicked_to_expand = Some(menu_idx);
             *selected_node = None;

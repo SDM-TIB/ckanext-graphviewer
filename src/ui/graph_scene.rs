@@ -322,9 +322,15 @@ impl App {
                 let is_fetchable = node.rdf_type.contains(crate::constants::TYPE_AUTHOR)
                     || node.rdf_type.contains(crate::constants::TYPE_DATASERVICE)
                     || node.rdf_type.contains(crate::constants::TYPE_DATASET)
-                    || node.rdf_type.contains(crate::constants::TYPE_CONCEPT);
+                    || node.rdf_type.contains(crate::constants::TYPE_CONCEPT)
+                    || node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION);
 
-                let needs_fetch = is_fetchable && !node.api_fetched;
+                let needs_fetch = is_fetchable && (
+                    !node.api_fetched || (
+                        node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION)
+                            && node.has_more_to_fetch
+                    )
+                );
 
                 if needs_fetch {
                     clicked_to_fetch = Some(index);
@@ -548,6 +554,8 @@ impl App {
                     state.clone(),
                     clicked_node_id.clone(),
                     clicked_node_id.clone(),
+                    nodes[fetch_idx].fetch_offset,
+                    49,
                     &api_url,
                 );
             }
@@ -557,6 +565,8 @@ impl App {
                     state.clone(),
                     clicked_node_id.clone(),
                     clicked_node_id.clone(),
+                    nodes[fetch_idx].fetch_offset,
+                    49,
                     &api_url,
                 );
             }
@@ -566,6 +576,19 @@ impl App {
                     state.clone(),
                     clicked_node_id.clone(),
                     clicked_node_label,
+                    nodes[fetch_idx].fetch_offset,
+                    49,
+                    &api_url,
+                );
+            }
+            if current_type.contains(crate::constants::TYPE_ORGANIZATION) {
+                crate::api_client::fetch_publisher_information(
+                    ctx.clone(),
+                    state.clone(),
+                    clicked_node_id.clone(),
+                    clicked_node_id.clone(),
+                    nodes[fetch_idx].fetch_offset,
+                    49,
                     &api_url,
                 );
             }

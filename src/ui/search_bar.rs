@@ -249,7 +249,7 @@ impl App {
                             if !new_triples.is_empty() {
                                 fetch_successful = true;
 
-                                let (temp_nodes, temp_edges) = crate::graph_processor::build_ui_graph(new_triples.clone());
+                                let (temp_nodes, temp_edges) = crate::graph_processor::build_ui_graph(new_triples.clone(), Some(&input));
 
                                 let mut temp_node_map = std::collections::HashMap::new();
                                 for n in temp_nodes.iter() {
@@ -289,7 +289,7 @@ impl App {
                                 combined_triples.sort();
                                 combined_triples.dedup();
 
-                                let (mut nodes, mut edges) = crate::graph_processor::build_ui_graph(combined_triples.clone());
+                                let (mut nodes, mut edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&input));
 
                                 for node in nodes.iter_mut() {
                                     if let Some(temp_n) = temp_node_map.get(&node.id) {

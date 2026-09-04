@@ -17,6 +17,8 @@ pub struct Node {
     pub properties: Vec<(String, String)>,
     pub api_fetched: bool,
     pub is_root: bool,
+    pub fetch_offset: usize,
+    pub has_more_to_fetch: bool,
 }
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
@@ -44,17 +46,12 @@ fn extract_label(uri_or_literal: &str) -> String {
         .to_string()
 }
 
-pub fn build_ui_graph(triples: Vec<RawTriple>) -> (Vec<Node>, Vec<Edge>) {
-    // build topology
+pub fn build_ui_graph(triples: Vec<RawTriple>, preferred_center: Option<&str>) -> (Vec<Node>, Vec<Edge>) {
     let (mut nodes_map, edges_map) = build_topology(&triples);
 
-    // figure out the center
-    let start_node = determine_start_node(&nodes_map, &edges_map);
+    let start_node = determine_start_node(&nodes_map, &edges_map, preferred_center);
 
-    // apply circular layout
     apply_circular_layout(&mut nodes_map, &edges_map, &start_node);
-
-    // convert to vec for speed
     finalize_graph(nodes_map, edges_map, &start_node)
 }
 
@@ -90,6 +87,8 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
             properties: Vec::new(),
             api_fetched: false,
             is_root: false,
+            fetch_offset: 0,
+            has_more_to_fetch: true,
         });
 
         if clean_pred == PRED_IS_ROOT {
@@ -123,6 +122,8 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
                 properties: Vec::new(),
                 api_fetched: false,
                 is_root: false,
+                fetch_offset: 0,
+                has_more_to_fetch: true,
             });
         }
 
@@ -200,7 +201,18 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
     (nodes_map, edges_map)
 }
 
-fn determine_start_node(nodes_map: &HashMap<String, Node>, edges_map: &HashMap<(String, String), Vec<String>>) -> String {
+fn determine_start_node(
+    nodes_map: &HashMap<String, Node>,
+    edges_map: &HashMap<(String, String), Vec<String>>,
+    preferred_center: Option<&str>
+) -> String {
+
+    if let Some(query) = preferred_center {
+        if let Some((id, _)) = nodes_map.iter().find(|(id, n)| n.label == query || *id == query) {
+            return id.clone();
+        }
+    }
+
     let mut degree_map: HashMap<String, usize> = HashMap::new();
     for (src, tgt) in edges_map.keys() {
         *degree_map.entry(src.clone()).or_insert(0) += 1;

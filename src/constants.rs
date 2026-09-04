@@ -5,6 +5,7 @@ pub const TYPE_AUTHOR: &str = "http://purl.org/spar/pro/Author";
 pub const TYPE_DATASET: &str = "http://www.w3.org/ns/dcat#Dataset";
 pub const TYPE_DATASERVICE: &str = "http://www.w3.org/ns/dcat#DataService";
 pub const TYPE_CONCEPT: &str = "http://www.w3.org/2004/02/skos/core#Concept";
+pub const TYPE_ORGANIZATION: &str = "http://www.w3.org/2006/vcard/ns#Organization";
 
 // Predicates
 pub const PRED_CREATOR: &str = "creator";
