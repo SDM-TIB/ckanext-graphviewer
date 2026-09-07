@@ -181,7 +181,7 @@ impl App {
                 let pos_x = 0.0;
                 let pos_y = text_response.rect.bottom() + 6.0;
                 let target_width = screen_rect.width() - 14.0;
-                let target_height = screen_rect.width() - 244.0;
+                let target_height = (screen_rect.bottom() - pos_y - 8.0).max(50.0);
 
                 egui::Area::new("autocomplete_popup_area".into())
                     .fixed_pos([pos_x, pos_y])
