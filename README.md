@@ -28,4 +28,4 @@ $ rm ckanext/graphviewer/public/graph_viewer/index.html
 ```
 ## needed Enviroment Variables
 
-CKANEXT__GRAPHVIEWER__APIIP__SUBPATH
+CKANEXT__GRAPHVIEWER__APIIP__SUBPATH=/kg_exploration
