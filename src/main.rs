@@ -312,7 +312,19 @@ impl App {
             style.interaction.tooltip_delay = 0.0;
         });
 
-        let is_system_dark = cc.egui_ctx.global_style().visuals.dark_mode;
+        let is_system_dark = {
+            #[cfg(target_arch = "wasm32")]
+            {
+                web_sys::window()
+                    .and_then(|w| w.match_media("(prefers-color-scheme: dark)").ok().flatten())
+                    .map(|m| m.matches())
+                    .unwrap_or(true) // Default to dark if detection fails
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                cc.egui_ctx.style().visuals.dark_mode
+            }
+        };
 
         if is_system_dark {
             cc.egui_ctx.set_visuals(egui::Visuals::dark());
