@@ -53,10 +53,17 @@ pub fn draw_radial_menu(
         std::f32::consts::PI / 4.0,  // Bottom-Right (+45 deg)
     ];
 
+    let btn1_tooltip = if show_plus {
+        "Expand the node"
+    } else {
+        "Collapse the node"
+    };
+
     // button 1 expand collapse logic
     let btn1_pos = screen_pos + egui::vec2(angles[0].cos() * menu_radius, angles[0].sin() * menu_radius);
     let btn1_rect = egui::Rect::from_center_size(btn1_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn1_resp = ui.interact(btn1_rect, ui.id().with(format!("btn_exp_{}", menu_idx)), egui::Sense::click());
+    let btn1_resp = ui.interact(btn1_rect, ui.id().with(format!("btn_exp_{}", menu_idx)), egui::Sense::click())
+        .on_hover_text(btn1_tooltip);
 
     painter.circle_filled(btn1_pos, btn_radius, theme.menu_expand_bg);
     let icon1 = if show_plus { "+" } else { "-" };
@@ -129,7 +136,8 @@ pub fn draw_radial_menu(
     // button 2 info box
     let btn2_pos = screen_pos + egui::vec2(angles[1].cos() * menu_radius, angles[1].sin() * menu_radius);
     let btn2_rect = egui::Rect::from_center_size(btn2_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn2_resp = ui.interact(btn2_rect, ui.id().with(format!("btn_info_{}", menu_idx)), egui::Sense::click());
+    let btn2_resp = ui.interact(btn2_rect, ui.id().with(format!("btn_info_{}", menu_idx)), egui::Sense::click())
+        .on_hover_text("Open node infobox");
 
     painter.circle_filled(btn2_pos, btn_radius, theme.menu_info_bg);
     let galley2 = painter.layout_no_wrap("i".into(), egui::FontId::proportional(14.0 * zoom), egui::Color32::WHITE);
@@ -142,7 +150,8 @@ pub fn draw_radial_menu(
     // button 3 copy node id
     let btn3_pos = screen_pos + egui::vec2(angles[2].cos() * menu_radius, angles[2].sin() * menu_radius);
     let btn3_rect = egui::Rect::from_center_size(btn3_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn3_resp = ui.interact(btn3_rect, ui.id().with(format!("btn_copy_{}", menu_idx)), egui::Sense::click());
+    let btn3_resp = ui.interact(btn3_rect, ui.id().with(format!("btn_copy_{}", menu_idx)), egui::Sense::click())
+        .on_hover_text("Copy nodeid to clipboard");
 
     painter.circle_filled(btn3_pos, btn_radius, theme.menu_api_bg);
     let galley3 = painter.layout_no_wrap("C".into(), egui::FontId::proportional(14.0 * zoom), egui::Color32::WHITE);
@@ -158,7 +167,8 @@ pub fn draw_radial_menu(
     // button 4 hide node
     let btn4_pos = screen_pos + egui::vec2(angles[3].cos() * menu_radius, angles[3].sin() * menu_radius);
     let btn4_rect = egui::Rect::from_center_size(btn4_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn4_resp = ui.interact(btn4_rect, ui.id().with(format!("btn_hide_{}", menu_idx)), egui::Sense::click());
+    let btn4_resp = ui.interact(btn4_rect, ui.id().with(format!("btn_hide_{}", menu_idx)), egui::Sense::click())
+        .on_hover_text("Hide the node");
 
     // Standard red tone for hide/delete context
     painter.circle_filled(btn4_pos, btn_radius, theme.menu_hide_bg);
