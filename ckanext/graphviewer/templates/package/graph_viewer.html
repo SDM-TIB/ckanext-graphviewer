@@ -57,6 +57,13 @@
      // observe whole document
      observer.observe(document.body, { childList: true, subtree: true });
 
+     // do not capture alt key
+     window.addEventListener('keydown', function(e) {
+         if (e.altKey) {
+             e.stopPropagation();
+         }
+     }, true);
+
      async function run() {
          try {
              await init('{{ root_path }}/graph_viewer/rdf_wasm_graph_bg.wasm');
