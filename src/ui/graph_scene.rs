@@ -187,6 +187,62 @@ impl App {
 
         painter.rect_filled(area_to_fill, 0.0, self.ui.theme.painter_bg);
 
+        let has_visible_nodes = nodes.iter().any(|n| n.visible);
+
+        if !has_visible_nodes {
+            let window_frame = egui::Frame::window(&ui.ctx().global_style())
+                .fill(self.ui.theme.button_bg)
+                .inner_margin(15.0)
+                .corner_radius(8.0)
+                .stroke(egui::Stroke::new(1.0_f32, self.ui.theme.edge_fg));
+
+            egui::Window::new("empty_graph_info")
+                .collapsible(false)
+                .resizable(false)
+                .title_bar(false)
+                .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+                .frame(window_frame)
+                .show(ui.ctx(), |ui| {
+                    ui.style_mut().visuals.override_text_color = Some(self.ui.theme.text_fg);
+
+                    ui.vertical_centered(|ui| {
+                        ui.heading(egui::RichText::new("Welcome to the Knowledge Graph").size(18.0).strong());
+                    });
+
+                    ui.add_space(15.0);
+
+                    egui::Grid::new("empty_graph_controls_grid")
+                        .num_columns(2)
+                        .spacing([30.0, 12.0])
+                        .show(ui, |ui| {
+                            ui.strong("Pan Camera:");       ui.label("Left-click and drag the background"); ui.end_row();
+                            ui.strong("Zoom Camera:");      ui.label("Scroll wheel or pinch gesture"); ui.end_row();
+                            ui.strong("Move Node:");        ui.label("Left-click and drag a node"); ui.end_row();
+                            ui.strong("Pin Details:");      ui.label("Single left-click a node"); ui.end_row();
+                            ui.strong("Expand / Fetch:");   ui.label("Double left-click a node"); ui.end_row();
+                            ui.strong("Context Menu:");     ui.label("Right-click a node"); ui.end_row();
+                        });
+
+                    ui.add_space(20.0);
+
+                    ui.vertical_centered(|ui| {
+                        // Use dimmed color from theme (or fallback to edge_fg if you don't have dimmed_text_fg)
+                        let hint_color = egui::Color32::from_rgba_unmultiplied(
+                            self.ui.theme.text_fg.r(),
+                            self.ui.theme.text_fg.g(),
+                            self.ui.theme.text_fg.b(),
+                            150
+                        );
+
+                        ui.label(
+                            egui::RichText::new("Use the search bar at the top to find and load a starting node.")
+                                .italics()
+                                .color(hint_color)
+                        );
+                    });
+                });
+        }
+
         let mut hovered_node = None;
         if let Some(pointer_pos) = ui.ctx().pointer_hover_pos() {
             // Reverse iteration ensures we select the top-most node if they overlap
