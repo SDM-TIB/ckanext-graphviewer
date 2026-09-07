@@ -1,7 +1,7 @@
 use crate::{AppState, graph_processor};
 use eframe::egui;
-use std::sync::{Arc, Mutex};
 use log::debug;
+use std::sync::{Arc, Mutex};
 
 fn process_graph_update(
     ctx: egui::Context,
@@ -15,15 +15,17 @@ fn process_graph_update(
     let returned_count = serde_json::from_str::<serde_json::Value>(json_text)
         .ok()
         .and_then(|v| {
-            v.get("results").and_then(|r| {
-                r.as_object().map(|o| o.len()).or_else(|| r.as_array().map(|a| a.len()))
-            })
+            v.get("results")
+                .and_then(|r| r.as_object().map(|o| o.len()).or_else(|| r.as_array().map(|a| a.len())))
         })
         .unwrap_or(0);
 
     let mut state_lock = state.lock().unwrap();
 
-    if let AppState::Ready { raw_triples, nodes, edges, .. } = &mut *state_lock {
+    if let AppState::Ready {
+        raw_triples, nodes, edges, ..
+    } = &mut *state_lock
+    {
         // create a snapshot of the state
         let mut old_nodes = std::collections::HashMap::new();
         for n in nodes.iter() {

@@ -204,9 +204,8 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
 fn determine_start_node(
     nodes_map: &HashMap<String, Node>,
     edges_map: &HashMap<(String, String), Vec<String>>,
-    preferred_center: Option<&str>
+    preferred_center: Option<&str>,
 ) -> String {
-
     if let Some(query) = preferred_center {
         if let Some((id, _)) = nodes_map.iter().find(|(id, n)| n.label == query || *id == query) {
             return id.clone();

@@ -2,6 +2,7 @@ pub mod api_client;
 pub mod constants;
 pub mod export;
 mod graph_processor;
+pub mod makro;
 mod node_menu;
 mod parser;
 mod theme;
@@ -499,7 +500,8 @@ impl eframe::App for App {
                         };
                         ui.label("Current View:");
 
-                        if ui.add(egui::Button::new("Graph View").fill(graph_bg))
+                        if ui
+                            .add(egui::Button::new("Graph View").fill(graph_bg))
                             .on_hover_text("View the knowledge graph visually")
                             .clicked()
                         {
@@ -511,7 +513,8 @@ impl eframe::App for App {
                         } else {
                             self.ui.theme.button_bg
                         };
-                        if ui.add(egui::Button::new("Analytics View").fill(analytics_bg))
+                        if ui
+                            .add(egui::Button::new("Analytics View").fill(analytics_bg))
                             .on_hover_text("View statistical analytics for the leaded data")
                             .clicked()
                         {
@@ -523,7 +526,8 @@ impl eframe::App for App {
                         } else {
                             self.ui.theme.button_bg
                         };
-                        if ui.add(egui::Button::new("Node Inspector View").fill(inspector_bg))
+                        if ui
+                            .add(egui::Button::new("Node Inspector View").fill(inspector_bg))
                             .on_hover_text("View a detailed, searchable list of all nodes and properties")
                             .clicked()
                         {
@@ -540,10 +544,7 @@ impl eframe::App for App {
 
                             let theme_button = egui::Button::new(theme_string);
 
-                            if ui.add(theme_button)
-                                .on_hover_text("Toggle the application color theme")
-                                .clicked()
-                            {
+                            if ui.add(theme_button).on_hover_text("Toggle the application color theme").clicked() {
                                 match self.ui.theme_mode {
                                     ThemeMode::Dark => {
                                         self.ui.theme_mode = ThemeMode::Light;
@@ -564,7 +565,8 @@ impl eframe::App for App {
                                 // Generate the ISO-like timestamp string
                                 let timestamp = chrono::Local::now().format("%Y-%m-%d_%H-%M").to_string();
 
-                                if ui.button("Export as SVG")
+                                if ui
+                                    .button("Export as SVG")
                                     .on_hover_text("Download the current graph view as a SVG")
                                     .clicked()
                                 {
@@ -574,7 +576,8 @@ impl eframe::App for App {
                                     ui.close();
                                 }
 
-                                if ui.button("Export as PNG")
+                                if ui
+                                    .button("Export as PNG")
                                     .on_hover_text("Download the current graph view as a PNG")
                                     .clicked()
                                 {
@@ -595,7 +598,8 @@ impl eframe::App for App {
                                     ui.close();
                                 }
 
-                                if ui.button("Export as N3")
+                                if ui
+                                    .button("Export as N3")
                                     .on_hover_text("Download the raw knowledge graph data in N3")
                                     .clicked()
                                 {
@@ -605,7 +609,8 @@ impl eframe::App for App {
                                     ui.close();
                                 }
 
-                                if ui.button("Export as JSON")
+                                if ui
+                                    .button("Export as JSON")
                                     .on_hover_text("Download the graph data as spatial coordinates as JSON")
                                     .clicked()
                                 {
@@ -614,7 +619,9 @@ impl eframe::App for App {
                                     crate::export::save_file(&filename, &json_data, "application/json");
                                     ui.close();
                                 }
-                            }).response.on_hover_text("Open a window to download information about the graph");
+                            })
+                            .response
+                            .on_hover_text("Open a window to download information about the graph");
                         });
                     });
                     ui.separator();

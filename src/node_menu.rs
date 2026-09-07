@@ -1,11 +1,5 @@
 use crate::AppState;
-use crate::constants::{
-    TYPE_AUTHOR,
-    TYPE_CONCEPT,
-    TYPE_DATASERVICE,
-    TYPE_DATASET,
-    TYPE_ORGANIZATION,
-};
+use crate::constants::{TYPE_AUTHOR, TYPE_CONCEPT, TYPE_DATASERVICE, TYPE_DATASET, TYPE_ORGANIZATION};
 use crate::graph_processor::{Edge, Node};
 use crate::theme::Theme;
 use eframe::egui;
@@ -69,7 +63,7 @@ pub fn draw_radial_menu(
     let galley1 = painter.layout_no_wrap(icon1.into(), egui::FontId::proportional(16.0 * zoom), egui::Color32::WHITE);
     painter.galley(btn1_pos - galley1.size() / 2.0, galley1, egui::Color32::WHITE);
 
-if btn1_resp.clicked() {
+    if btn1_resp.clicked() {
         if needs_fetch {
             // Execute API Fetch
             *show_menu = false;

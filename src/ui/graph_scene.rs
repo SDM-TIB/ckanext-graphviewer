@@ -18,7 +18,8 @@ impl App {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let reset_view_button =
                     egui::Button::new(egui::RichText::new("Reset View").color(self.ui.theme.text_fg)).fill(self.ui.theme.button_bg);
-                if ui.add(reset_view_button)
+                if ui
+                    .add(reset_view_button)
                     .on_hover_text("Reset the graph view to the initial snapshot")
                     .clicked()
                 {
@@ -163,7 +164,6 @@ impl App {
         }
 
         let scroll_y = ui.input(|i| i.smooth_scroll_delta.y);
-
         let pinch_zoom = ui.input(|i| i.zoom_delta());
 
         let mut zoom_multiplier = pinch_zoom;
@@ -174,128 +174,80 @@ impl App {
         if zoom_multiplier != 1.0 {
             if let Some(pointer_pos) = ui.ctx().pointer_hover_pos() {
                 let pointer_vec = pointer_pos.to_vec2();
-
                 let graph_pos = (pointer_vec - screen_center - self.ui.pan) / self.ui.zoom;
 
                 self.ui.zoom *= zoom_multiplier;
                 self.ui.zoom = self.ui.zoom.clamp(0.1, 5.0);
-
                 self.ui.pan = pointer_vec - screen_center - graph_pos * self.ui.zoom;
             }
         }
 
         let to_screen = |p: egui::Pos2| -> egui::Pos2 { (screen_center + self.ui.pan + p.to_vec2() * self.ui.zoom).to_pos2() };
-
         let painter = ui.painter().with_clip_rect(area_to_fill);
 
         painter.rect_filled(area_to_fill, 0.0, self.ui.theme.painter_bg);
 
-        // draw edges and labels
-        for edge in edges.iter() {
-            if !edge.visible {
-                continue;
-            }
-
-            let s = &nodes[edge.source];
-            let t = &nodes[edge.target];
-
-            let p1 = to_screen(s.pos);
-            let p2 = to_screen(t.pos);
-            let vector = p2 - p1;
-            let length = vector.length();
-
-            if length == 0.0 {
-                continue;
-            }
-            let dir = vector / length;
-
-            // draw edge
-            painter.line_segment([p1, p2], egui::Stroke::new(1.5 * self.ui.zoom, self.ui.theme.edge_fg));
-
-            let node_radius = 15.0 * self.ui.zoom;
-            let arrow_len = 12.0 * self.ui.zoom;
-            let arrow_angle = 0.4;
-            let line_angle = dir.y.atan2(dir.x);
-
-            // draw arrowhead
-            let tip = p2 - (dir * node_radius);
-            let angle_left = line_angle - arrow_angle;
-            let p_left = tip - egui::vec2(angle_left.cos(), angle_left.sin()) * arrow_len;
-            let angle_right = line_angle + arrow_angle;
-            let p_right = tip - egui::vec2(angle_right.cos(), angle_right.sin()) * arrow_len;
-
-            painter.add(egui::Shape::convex_polygon(
-                vec![tip, p_left, p_right],
-                self.ui.theme.edge_fg,
-                egui::Stroke::NONE,
-            ));
-
-            // draw arrowhead reverse
-            if edge.bidirectional {
-                let tip_rev = p1 + (dir * node_radius);
-                let dir_rev = -dir;
-                let line_angle_rev = dir_rev.y.atan2(dir_rev.x);
-
-                let angle_left_rev = line_angle_rev - arrow_angle;
-                let p_left_rev = tip_rev - egui::vec2(angle_left_rev.cos(), angle_left_rev.sin()) * arrow_len;
-                let angle_right_rev = line_angle_rev + arrow_angle;
-                let p_right_rev = tip_rev - egui::vec2(angle_right_rev.cos(), angle_right_rev.sin()) * arrow_len;
-
-                painter.add(egui::Shape::convex_polygon(
-                    vec![tip_rev, p_left_rev, p_right_rev],
-                    self.ui.theme.edge_fg,
-                    egui::Stroke::NONE,
-                ));
-            }
-
-            // draw label
-            let center_point = p1 + (dir * length * 0.5);
-
-            let font_size = (10.0 * self.ui.zoom).round();
-
-            if font_size > 4.0 {
-                let is_flipped = dir.x < 0.0;
-
-                let display_text = if !is_flipped {
-                    // target is to the right
-                    if let Some(rev) = &edge.reverse_label {
-                        format!("{} ->\n<- {}", edge.label, rev)
-                    } else if edge.bidirectional {
-                        format!("<- {} ->", edge.label)
-                    } else {
-                        format!("{} ->", edge.label)
-                    }
-                } else {
-                    // target is to the left
-                    if let Some(rev) = &edge.reverse_label {
-                        format!("<- {}\n{} ->", edge.label, rev)
-                    } else if edge.bidirectional {
-                        format!("<- {} ->", edge.label)
-                    } else {
-                        format!("<- {}", edge.label)
-                    }
-                };
-
-                let galley = painter.layout_no_wrap(display_text, egui::FontId::proportional(font_size), self.ui.theme.text_fg);
-
-                let size = galley.size();
-                let padding = 3.0 * self.ui.zoom;
-
-                let snapped_center = egui::pos2(center_point.x.round(), center_point.y.round());
-                let text_rect = egui::Rect::from_center_size(snapped_center, size);
-
-                // background box for label
-                painter.rect_filled(text_rect.expand(padding), 2.0 * self.ui.zoom, self.ui.theme.painter_bg);
-
-                painter.galley(text_rect.min, galley, self.ui.theme.text_fg);
+        let mut hovered_node = None;
+        if let Some(pointer_pos) = ui.ctx().pointer_hover_pos() {
+            // Reverse iteration ensures we select the top-most node if they overlap
+            for (index, node) in nodes.iter().enumerate().rev() {
+                if !node.visible {
+                    continue;
+                }
+                let screen_pos = to_screen(node.pos);
+                let radius = 15.0 * self.ui.zoom;
+                let rect = egui::Rect::from_center_size(screen_pos, egui::vec2(radius * 2.0, radius * 2.0));
+                if rect.contains(pointer_pos) {
+                    hovered_node = Some(index);
+                    break;
+                }
             }
         }
 
-        // draw node
+        let mut connected_nodes = std::collections::HashSet::new();
+        let mut connected_edges = std::collections::HashSet::new();
+
+        if let Some(hovered_idx) = hovered_node {
+            connected_nodes.insert(hovered_idx);
+            for (e_idx, edge) in edges.iter().enumerate() {
+                if !edge.visible {
+                    continue;
+                }
+                if edge.source == hovered_idx {
+                    connected_nodes.insert(edge.target);
+                    connected_edges.insert(e_idx);
+                } else if edge.target == hovered_idx {
+                    connected_nodes.insert(edge.source);
+                    connected_edges.insert(e_idx);
+                }
+            }
+        }
+
+        // ==============================================================
+        // --- 4-STAGE RENDERING PASSES FOR CORRECT HIGHLIGHT Z-INDEX ---
+        // ==============================================================
+
+        // PASS 1: Draw ALL dimmed edges first (Bottom layer)
+        for (edge_idx, edge) in edges.iter().enumerate() {
+            if !edge.visible {
+                continue;
+            }
+            let is_connected_edge = connected_edges.contains(&edge_idx);
+            let is_dimmed = hovered_node.is_some() && !is_connected_edge;
+
+            if is_dimmed {
+                crate::draw_edge!(edge, is_connected_edge, true, self, painter, nodes, to_screen);
+            }
+        }
+
         let mut clicked_to_expand = None;
         let mut dragged_node_delta = None;
         let mut clicked_to_fetch = None;
 
+        // Temporarily store highlighted nodes so we can defer drawing them to the end
+        let mut nodes_to_draw_on_top = Vec::new();
+
+        // PASS 2: Handle node interactions and draw ONLY dimmed nodes
         for (index, node) in nodes.iter().enumerate() {
             if !node.visible {
                 continue;
@@ -312,7 +264,6 @@ impl App {
 
             let current_time = ui.input(|i| i.time);
 
-            // node it dragged
             if response.dragged() {
                 let delta = response.drag_delta() / self.ui.zoom;
                 self.ui.selected_node = None;
@@ -320,7 +271,6 @@ impl App {
                 dragged_node_delta = Some((index, delta));
             }
 
-            // left double click / left click
             if response.double_clicked() {
                 let is_fetchable = node.rdf_type.contains(crate::constants::TYPE_AUTHOR)
                     || node.rdf_type.contains(crate::constants::TYPE_DATASERVICE)
@@ -328,12 +278,8 @@ impl App {
                     || node.rdf_type.contains(crate::constants::TYPE_CONCEPT)
                     || node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION);
 
-                let needs_fetch = is_fetchable && (
-                    !node.api_fetched || (
-                        node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION)
-                            && node.has_more_to_fetch
-                    )
-                );
+                let needs_fetch = is_fetchable
+                    && (!node.api_fetched || (node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION) && node.has_more_to_fetch));
 
                 if needs_fetch {
                     clicked_to_fetch = Some(index);
@@ -348,97 +294,66 @@ impl App {
                 self.ui.pending_click_time = current_time;
             }
 
-            // right click
             if response.secondary_clicked() {
                 self.ui.selected_node = Some(index);
                 self.ui.show_menu = true;
                 self.ui.pending_click_node = None;
             }
 
-            // delay infobox till we are sure no double click happend
             if self.ui.pending_click_node == Some(index) {
                 if (current_time - self.ui.pending_click_time) > 0.25 {
-                    // 250 ms
                     if self.ui.selected_node == Some(index) && !self.ui.show_menu {
                         self.ui.selected_node = None;
                     } else {
                         self.ui.selected_node = Some(index);
                         self.ui.show_menu = false;
                     }
-                    self.ui.pending_click_node = None; // Clear the timer
+                    self.ui.pending_click_node = None;
                 } else {
                     ui.ctx().request_repaint();
                 }
             }
 
-            let is_pinned = self.ui.selected_node == Some(index) && !self.ui.show_menu;
+            let is_highlighted = hovered_node == Some(index) || connected_nodes.contains(&index);
+            let is_dimmed = hovered_node.is_some() && !is_highlighted;
 
-            if is_pinned {
-                let offset = egui::vec2(20.0 * self.ui.zoom, 20.0 * self.ui.zoom);
-
-                egui::Window::new(format!("node_window_{}", node.id))
-                    .fixed_pos(screen_pos + offset)
-                    .title_bar(false)
-                    .resizable(false)
-                    .collapsible(false)
-                    .frame(egui::Frame::popup(&ctx.global_style()))
-                    .show(&ctx, |ui| {
-                        ui.heading(&node.label);
-                        ui.separator();
-
-                        draw_node_details(ui, node);
-
-                        ui.add_space(5.0);
-                        if ui.button("Close").clicked() {
-                            self.ui.selected_node = None;
-                        }
-                    });
-            }
-
-            let node_theme = self.ui.theme.get_node_colors(&node.rdf_type);
-
-            let color = if response.hovered() {
-                node_theme.hovered
+            if is_dimmed {
+                // Draw dimmed node over dimmed edge
+                crate::draw_node!(index, node, response, true, self, ctx, painter, edges, to_screen, draw_node_details);
             } else {
-                node_theme.normal
-            };
-
-            painter.circle_filled(screen_pos, radius, color);
-
-            let font_size = 12.0 * self.ui.zoom;
-            if font_size > 4.0 {
-                let display_text = if node.label.len() > 50 {
-                    let pred_name = edges
-                        .iter()
-                        .find(|e| e.target == index)
-                        .map(|e| e.label.clone())
-                        .unwrap_or_else(|| "Dataset".to_string());
-                    let display_pred = {
-                        let mut c = pred_name.chars();
-                        match c.next() {
-                            None => String::new(),
-                            Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-                        }
-                    };
-
-                    format!("{} (Click to show)", display_pred)
-                } else {
-                    node.label.clone()
-                };
-
-                let galley = painter.layout_no_wrap(
-                    display_text.to_string(),
-                    egui::FontId::proportional(font_size),
-                    self.ui.theme.text_fg,
-                );
-
-                let text_pos = screen_pos + egui::vec2(0.0, 20.0 * self.ui.zoom);
-                let text_rect = egui::Align2::CENTER_TOP.anchor_rect(egui::Rect::from_min_size(text_pos, galley.size()));
-
-                painter.rect_filled(text_rect.expand(2.0 * self.ui.zoom), 2.0 * self.ui.zoom, self.ui.theme.painter_bg);
-
-                painter.galley(text_rect.min, galley, self.ui.theme.text_fg);
+                // Save it for the top layer pass
+                nodes_to_draw_on_top.push((index, response));
             }
+        }
+
+        // PASS 3: Draw highlighted (or normal) edges over dimmed nodes
+        for (edge_idx, edge) in edges.iter().enumerate() {
+            if !edge.visible {
+                continue;
+            }
+            let is_connected_edge = connected_edges.contains(&edge_idx);
+            let is_dimmed = hovered_node.is_some() && !is_connected_edge;
+
+            if !is_dimmed {
+                crate::draw_edge!(edge, is_connected_edge, false, self, painter, nodes, to_screen);
+            }
+        }
+
+        // PASS 4: Finally, draw highlighted (or normal) nodes (Top layer)
+        for (index, response) in nodes_to_draw_on_top {
+            let node = &nodes[index];
+            crate::draw_node!(
+                index,
+                node,
+                response,
+                false,
+                self,
+                ctx,
+                painter,
+                edges,
+                to_screen,
+                draw_node_details
+            );
         }
 
         // node menu
@@ -468,14 +383,6 @@ impl App {
         // move child node in sync
         if let Some((parent_idx, delta)) = dragged_node_delta {
             nodes[parent_idx].pos += delta;
-
-            // TODO decide on a movement strategie
-            // for edge in edges.iter() {
-            //     if edge.source == parent_idx && edge.visible {
-            //         let child_idx = edge.target;
-            //         nodes[child_idx].pos += delta;
-            //     }
-            // }
         }
 
         // expansion
