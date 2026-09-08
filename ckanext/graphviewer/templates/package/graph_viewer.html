@@ -3,16 +3,13 @@
 {% block main_content %}
 
 {% set root_path = '' %}
-{% if request %}
-{% set raw_prefix =  config.get('ckan.root_path') %}
-{% set cleaned_prefix = raw_prefix
-| replace('{{LANG}}', '')
+{% set raw_root_path = config.get('ckan.root_path') %}
+{% if raw_root_path is not none %}
+{% set root_path = raw_root_path
+| replace('/{{LANG}}', '')
 | replace('%7B%7BLANG%7D%7D', '')
 | replace('//', '/')
 %}
-{% if cleaned_prefix != 'undefined' %}
-{% set root_path = '/' ~ cleaned_prefix.strip('/') %}
-{% endif %}
 {% endif %}
 
 <div class="container" style="margin-top: 0px;">
@@ -77,3 +74,4 @@
     </script>
 </div>
 {% endblock %}
+
