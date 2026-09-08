@@ -245,8 +245,6 @@ pub fn get_dynamic_ckan_url() -> String {
             }
         }
 
-        info!("root_path: {}", root_path);
-
         if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
             let port_str = if port.is_empty() { String::new() } else { format!(":{}", port) };
 
