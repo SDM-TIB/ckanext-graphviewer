@@ -249,37 +249,6 @@ impl App {
                     ui.label(egui::RichText::new(
                         "This tool offers you the ability to graphically view the content of the LDM KG. Start by selecting a start point and confirming it in the very top widget. After loading a starting point, the graph view will show that information graphically, the analytics view shows information about the loaded triples, and the node inspector view can show a tabular view of the information connected to a node. The export button exports the loaded data in different formats. The colour mode button gives you the ability to switch between light and dark mode themes. The graph in the graph view can be reset with Reset View. On the left is the legend and further information on graph controls."                    ).size(15.0));
 
-                    // ui.add_space(15.0);
-
-                    // egui::Grid::new("empty_graph_controls_grid")
-                    //     .num_columns(2)
-                    //     .spacing([30.0, 12.0])
-                    //     .show(ui, |ui| {
-                    //         ui.strong("Pan Camera:");       ui.label("Left-click and drag the background"); ui.end_row();
-                    //         ui.strong("Zoom Camera:");      ui.label("Scroll wheel or pinch gesture"); ui.end_row();
-                    //         ui.strong("Move Node:");        ui.label("Left-click and drag a node"); ui.end_row();
-                    //         ui.strong("Pin Details:");      ui.label("Single left-click a node"); ui.end_row();
-                    //         ui.strong("Expand / Fetch:");   ui.label("Double left-click a node"); ui.end_row();
-                    //         ui.strong("Context Menu:");     ui.label("Right-click a node"); ui.end_row();
-                    //     });
-
-                    // ui.add_space(20.0);
-
-                    // ui.vertical_centered(|ui| {
-                    //     // Use dimmed color from theme (or fallback to edge_fg if you don't have dimmed_text_fg)
-                    //     let hint_color = egui::Color32::from_rgba_unmultiplied(
-                    //         self.ui.theme.text_fg.r(),
-                    //         self.ui.theme.text_fg.g(),
-                    //         self.ui.theme.text_fg.b(),
-                    //         150
-                    //     );
-
-                    //     ui.label(
-                    //         egui::RichText::new("Use the search bar at the top to find and load a starting node.")
-                    //             .italics()
-                    //             .color(hint_color)
-                    //     );
-                    // });
                 });
         }
 
