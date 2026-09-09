@@ -1,6 +1,9 @@
 use eframe::egui::{Color32, Stroke, Visuals};
 use std::collections::HashMap;
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 #[derive(Debug, Clone)]
 pub struct NodeColors {
     pub normal: Color32,

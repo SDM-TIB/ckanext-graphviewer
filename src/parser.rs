@@ -1,6 +1,8 @@
-use log::{debug, error};
 use oxttl::N3Parser;
 use serde_json::Value;
+
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RawTriple {

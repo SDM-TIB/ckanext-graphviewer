@@ -5,6 +5,9 @@ use crate::theme::Theme;
 use eframe::egui;
 use std::sync::{Arc, Mutex};
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 #[allow(clippy::too_many_arguments)]
 pub fn draw_radial_menu(
     ui: &mut egui::Ui,

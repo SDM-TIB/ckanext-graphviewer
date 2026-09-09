@@ -1,7 +1,9 @@
 use crate::{AppState, graph_processor};
 use eframe::egui;
-use log::debug;
 use std::sync::{Arc, Mutex};
+
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
 
 fn process_graph_update(
     ctx: egui::Context,

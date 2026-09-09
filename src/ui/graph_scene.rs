@@ -2,6 +2,9 @@ use crate::graph_processor::{Edge, Node};
 use crate::{App, GraphSnapshot};
 use eframe::egui;
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 impl App {
     pub fn render_graph_scene(
         &mut self,

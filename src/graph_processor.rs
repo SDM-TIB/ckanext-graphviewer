@@ -3,6 +3,9 @@ use crate::parser::RawTriple;
 use eframe::egui;
 use std::collections::{HashMap, HashSet, VecDeque};
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 #[derive(Debug, Clone)]
 pub struct Node {
     pub id: String,

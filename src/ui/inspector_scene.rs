@@ -2,6 +2,9 @@ use crate::App;
 use crate::graph_processor::{Edge, Node};
 use eframe::egui;
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 impl App {
     pub fn render_inspector_scene(&mut self, ui: &mut egui::Ui, nodes: &mut [Node], edges: &mut [Edge]) {
         // render node inspector

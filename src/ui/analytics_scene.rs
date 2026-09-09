@@ -3,6 +3,9 @@ use crate::graph_processor::{Edge, Node};
 use crate::parser::RawTriple;
 use eframe::egui;
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 impl App {
     pub fn render_analytics_scene(&mut self, ui: &mut egui::Ui, nodes: &[Node], edges: &[Edge], raw_triples: &[RawTriple]) {
         // render analytics

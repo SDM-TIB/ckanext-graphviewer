@@ -1,6 +1,8 @@
 use crate::{App, SearchType};
 use eframe::egui;
-use log::info;
+
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
 
 /* the search bar is on its own just one ui.horizontal element which
   houses a label a combobox and a text edit and a button as well as the progressinfo label

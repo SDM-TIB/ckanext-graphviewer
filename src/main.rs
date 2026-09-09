@@ -9,13 +9,15 @@ mod theme;
 pub mod ui;
 
 use eframe::egui;
-use log::info;
 use serde::Deserialize;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 
 use graph_processor::{Edge, Node};
 use theme::Theme;
+
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
 
 #[derive(Deserialize, Debug)]
 pub struct CkanResponse {

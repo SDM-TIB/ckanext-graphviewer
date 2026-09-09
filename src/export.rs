@@ -2,6 +2,9 @@ use crate::graph_processor::{Edge, Node};
 use crate::theme::Theme;
 use eframe::egui::Color32;
 
+#[allow(unused_imports)]
+use log::{debug, error, info, trace, warn};
+
 // Helper to convert egui::Color32 to a web-friendly hex string
 fn color_to_hex(color: Color32) -> String {
     format!("#{:02X}{:02X}{:02X}", color.r(), color.g(), color.b())
