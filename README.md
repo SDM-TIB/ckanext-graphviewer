@@ -33,7 +33,7 @@ $ cargo run --release
 ## Installing the plugin in a LDM instance
 
 ### presesnt env vars
-CKANEXT__GRAPHVIEWER__APIIP__SUBPATH=/kg_exploration
+CKANEXT__GRAPHVIEWER__APIIP__SUBPATH=/kg_exploration  
 CKANEXT__KG_EXPLORATION__ENDPOINT=http://ldm_kg:8890/sparql
 
 ### dependencys
