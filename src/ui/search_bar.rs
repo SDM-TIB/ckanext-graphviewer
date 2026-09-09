@@ -186,13 +186,13 @@ impl App {
                 let target_height = (screen_rect.bottom() - pos_y - 8.0).max(50.0);
 
                 egui::Area::new("autocomplete_popup_area".into())
-                    .fixed_pos([pos_x, pos_y])
+                    .fixed_pos([pos_x + 6.0, pos_y])
                     .show(ui.ctx(), |ui| {
                         egui::Frame::popup(ui.style()).show(ui, |ui| {
-                            ui.set_min_width(target_width);
-                            ui.set_max_width(target_width);
-                            ui.set_min_height(target_height);
-                            ui.set_max_height(target_height);
+                            ui.set_min_width(target_width - 12.0);
+                            ui.set_max_width(target_width - 12.0);
+                            ui.set_min_height(target_height - 12.0);
+                            ui.set_max_height(target_height - 12.0);
 
                             egui::ScrollArea::vertical().show(ui, |ui| {
                                 if filtered_suggestions.is_empty() && !self.search.autocomplete_fetching {
