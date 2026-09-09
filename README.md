@@ -32,7 +32,9 @@ $ cargo run --release
 
 ## Installing the plugin in a LDM instance
 
-### presesnt env vars
+### Environment Vaiables
+The following variables need to be present and readable for ckanext-graphviewer and dependencys to work correctly
+
 CKANEXT__GRAPHVIEWER__APIIP__SUBPATH=/kg_exploration  
 CKANEXT__KG_EXPLORATION__ENDPOINT=http://ldm_kg:8890/sparql
 
