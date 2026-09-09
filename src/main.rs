@@ -322,7 +322,7 @@ impl App {
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
-                cc.egui_ctx.style().visuals.dark_mode
+                cc.egui_ctx.global_style().visuals.dark_mode
             }
         };
 
