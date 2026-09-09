@@ -110,43 +110,77 @@ impl App {
                 });
         };
 
-        // define a frame that houses the color config for the legend
-        let legend_outline = egui::Frame::window(&ui.ctx().global_style())
+        // define a single frame that houses the color config for both legend and controls
+        let combined_outline = egui::Frame::window(&ui.ctx().global_style())
             .fill(self.ui.theme.button_bg)
             .inner_margin(3.0)
             .corner_radius(5.0)
             .stroke(egui::Stroke::new(2.0_f32, self.ui.theme.master_bg));
 
-        // render legend
-        egui::Window::new(egui::RichText::new("Legend").color(self.ui.theme.text_fg))
-            .anchor(egui::Align2::LEFT_TOP, egui::vec2(12.0, 101.0)) // 6 pixel space from left and top
-            .collapsible(true)
+        // render combined window without the outer title bar
+        egui::Window::new("legend_and_controls_window")
+            .anchor(egui::Align2::LEFT_TOP, egui::vec2(12.0, 101.0))
+            .title_bar(false)
+            .collapsible(false)
             .resizable(false)
-            .frame(legend_outline)
+            .frame(combined_outline)
             .show(ui.ctx(), |ui| {
                 ui.style_mut().visuals.override_text_color = Some(self.ui.theme.text_fg);
-                egui::Frame::NONE
+
+                // Define the inner style for the content of the collapsing headers
+                let inner_frame = egui::Frame::NONE
                     .inner_margin(5.0)
                     .corner_radius(5.0)
                     .stroke(egui::Stroke::new(1.0_f32, self.ui.theme.edge_fg))
-                    .fill(self.ui.theme.master_bg)
+                    .fill(self.ui.theme.master_bg);
+
+                // Legend section
+                egui::CollapsingHeader::new(egui::RichText::new("Legend").color(self.ui.theme.text_fg))
+                    .default_open(false)
                     .show(ui, |ui| {
-                        egui::Grid::new("legend_grid").num_columns(2).spacing([10.0, 8.0]).show(ui, |ui| {
-                            for (uri, colors) in &self.ui.theme.node_map {
-                                let display_name = uri.split('#').last().unwrap_or(uri);
-                                let display_name = display_name.split('/').last().unwrap_or(display_name);
+                        inner_frame.show(ui, |ui| {
+                            egui::Grid::new("legend_grid").num_columns(2).spacing([10.0, 8.0]).show(ui, |ui| {
+                                for (uri, colors) in &self.ui.theme.node_map {
+                                    let display_name = uri.split('#').last().unwrap_or(uri);
+                                    let display_name = display_name.split('/').last().unwrap_or(display_name);
+
+                                    let (rect, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
+                                    ui.painter().circle_filled(rect.center(), 6.0, colors.normal);
+
+                                    ui.label(display_name);
+                                    ui.end_row();
+                                }
 
                                 let (rect, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
-                                ui.painter().circle_filled(rect.center(), 6.0, colors.normal);
-
-                                ui.label(display_name);
+                                ui.painter().circle_filled(rect.center(), 6.0, self.ui.theme.default_node.normal);
+                                ui.label("Other");
                                 ui.end_row();
-                            }
+                            });
+                        });
+                    });
 
-                            let (rect, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
-                            ui.painter().circle_filled(rect.center(), 6.0, self.ui.theme.default_node.normal);
-                            ui.label("Other");
-                            ui.end_row();
+                // Controls section
+                egui::CollapsingHeader::new(egui::RichText::new("Controls").color(self.ui.theme.text_fg))
+                    .default_open(false)
+                    .show(ui, |ui| {
+                        inner_frame.show(ui, |ui| {
+                            egui::Grid::new("controls_window_grid")
+                                .num_columns(2)
+                                .spacing([20.0, 8.0])
+                                .show(ui, |ui| {
+                                    ui.strong("Move Camera:"); ui.label("Left-click and drag background");
+                                    ui.end_row();
+                                    ui.strong("Zoom Camera:"); ui.label("Scroll wheel or pinch");
+                                    ui.end_row();
+                                    ui.strong("Move Node:"); ui.label("Left-click and drag a node");
+                                    ui.end_row();
+                                    ui.strong("Open Infobox of a node:"); ui.label("Single left-click a node");
+                                    ui.end_row();
+                                    ui.strong("Expand / Collaps a node:"); ui.label("Double left-click a node");
+                                    ui.end_row();
+                                    ui.strong("Open Context Menu of a node:"); ui.label("Right-click a node");
+                                    ui.end_row();
+                                });
                         });
                     });
             });
@@ -209,40 +243,43 @@ impl App {
                     ui.style_mut().visuals.override_text_color = Some(self.ui.theme.text_fg);
 
                     ui.vertical_centered(|ui| {
-                        ui.heading(egui::RichText::new("Welcome to the Knowledge Graph").size(18.0).strong());
+                        ui.heading(egui::RichText::new("Welcome to the LDM KG traversal Tool").size(18.0).strong());
                     });
 
-                    ui.add_space(15.0);
+                    ui.label(egui::RichText::new(
+                        "This tool offers you the ability to graphically view the content of the LDM KG. Start by selecting a start point and confirming it in the very top widget. After loading a starting point, the graph view will show that information graphically, the analytics view shows information about the loaded triples, and the node inspector view can show a tabular view of the information connected to a node. The export button exports the loaded data in different formats. The colour mode button gives you the ability to switch between light and dark mode themes. The graph in the graph view can be reset with Reset View. On the left is the legend and further information on graph controls."                    ).size(15.0));
 
-                    egui::Grid::new("empty_graph_controls_grid")
-                        .num_columns(2)
-                        .spacing([30.0, 12.0])
-                        .show(ui, |ui| {
-                            ui.strong("Pan Camera:");       ui.label("Left-click and drag the background"); ui.end_row();
-                            ui.strong("Zoom Camera:");      ui.label("Scroll wheel or pinch gesture"); ui.end_row();
-                            ui.strong("Move Node:");        ui.label("Left-click and drag a node"); ui.end_row();
-                            ui.strong("Pin Details:");      ui.label("Single left-click a node"); ui.end_row();
-                            ui.strong("Expand / Fetch:");   ui.label("Double left-click a node"); ui.end_row();
-                            ui.strong("Context Menu:");     ui.label("Right-click a node"); ui.end_row();
-                        });
+                    // ui.add_space(15.0);
 
-                    ui.add_space(20.0);
+                    // egui::Grid::new("empty_graph_controls_grid")
+                    //     .num_columns(2)
+                    //     .spacing([30.0, 12.0])
+                    //     .show(ui, |ui| {
+                    //         ui.strong("Pan Camera:");       ui.label("Left-click and drag the background"); ui.end_row();
+                    //         ui.strong("Zoom Camera:");      ui.label("Scroll wheel or pinch gesture"); ui.end_row();
+                    //         ui.strong("Move Node:");        ui.label("Left-click and drag a node"); ui.end_row();
+                    //         ui.strong("Pin Details:");      ui.label("Single left-click a node"); ui.end_row();
+                    //         ui.strong("Expand / Fetch:");   ui.label("Double left-click a node"); ui.end_row();
+                    //         ui.strong("Context Menu:");     ui.label("Right-click a node"); ui.end_row();
+                    //     });
 
-                    ui.vertical_centered(|ui| {
-                        // Use dimmed color from theme (or fallback to edge_fg if you don't have dimmed_text_fg)
-                        let hint_color = egui::Color32::from_rgba_unmultiplied(
-                            self.ui.theme.text_fg.r(),
-                            self.ui.theme.text_fg.g(),
-                            self.ui.theme.text_fg.b(),
-                            150
-                        );
+                    // ui.add_space(20.0);
 
-                        ui.label(
-                            egui::RichText::new("Use the search bar at the top to find and load a starting node.")
-                                .italics()
-                                .color(hint_color)
-                        );
-                    });
+                    // ui.vertical_centered(|ui| {
+                    //     // Use dimmed color from theme (or fallback to edge_fg if you don't have dimmed_text_fg)
+                    //     let hint_color = egui::Color32::from_rgba_unmultiplied(
+                    //         self.ui.theme.text_fg.r(),
+                    //         self.ui.theme.text_fg.g(),
+                    //         self.ui.theme.text_fg.b(),
+                    //         150
+                    //     );
+
+                    //     ui.label(
+                    //         egui::RichText::new("Use the search bar at the top to find and load a starting node.")
+                    //             .italics()
+                    //             .color(hint_color)
+                    //     );
+                    // });
                 });
         }
 
