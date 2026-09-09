@@ -36,6 +36,9 @@ pub fn parse_n3_file(file_content: &str) -> Vec<RawTriple> {
         }
     }
 
+    triples.sort();
+    triples.dedup();
+
     triples
 }
 
@@ -62,6 +65,9 @@ pub fn parse_dynamic_api_json(json_text: &str) -> Vec<RawTriple> {
     if triples.is_empty() {
         println!("WARNING: Parser returned 0 triples! Raw API response was:\n{}", json_text);
     }
+
+    triples.sort();
+    triples.dedup();
 
     triples
 }
