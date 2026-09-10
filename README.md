@@ -124,6 +124,14 @@ kg_exploration:
     - "traefik.http.services.kge.loadbalancer.server.port=5742"
 
 ```
+### Plugin dependency
+
+| Plugin | Purpose |
+|---|---|
+| TIBtheme | display of datasets |
+| kgcreation | display of exports of a dataset |
+
+---
 
 ### Treafik Edge Router
 
