@@ -252,19 +252,22 @@ impl App {
                 });
         }
 
-        let mut hovered_node = None;
-        if let Some(pointer_pos) = ui.ctx().pointer_hover_pos() {
-            // Reverse iteration ensures we select the top-most node if they overlap
-            for (index, node) in nodes.iter().enumerate().rev() {
-                if !node.visible {
-                    continue;
-                }
-                let screen_pos = to_screen(node.pos);
-                let radius = 15.0 * self.ui.zoom;
-                let rect = egui::Rect::from_center_size(screen_pos, egui::vec2(radius * 2.0, radius * 2.0));
-                if rect.contains(pointer_pos) {
-                    hovered_node = Some(index);
-                    break;
+        let mut hovered_node = self.ui.dragged_node;
+
+        if hovered_node.is_none() {
+            if let Some(pointer_pos) = ui.ctx().pointer_hover_pos() {
+                // Reverse iteration ensures we select the top-most node if they overlap
+                for (index, node) in nodes.iter().enumerate().rev() {
+                    if !node.visible {
+                        continue;
+                    }
+                    let screen_pos = to_screen(node.pos);
+                    let radius = 15.0 * self.ui.zoom;
+                    let rect = egui::Rect::from_center_size(screen_pos, egui::vec2(radius * 2.0, radius * 2.0));
+                    if rect.contains(pointer_pos) {
+                        hovered_node = Some(index);
+                        break;
+                    }
                 }
             }
         }
@@ -312,6 +315,9 @@ impl App {
         // Temporarily store highlighted nodes so we can defer drawing them to the end
         let mut nodes_to_draw_on_top = Vec::new();
 
+        // track if any node is activle beeing dragged
+        let mut any_dragged_node = false;
+
         // PASS 2: Handle node interactions and draw ONLY dimmed nodes
         for (index, node) in nodes.iter().enumerate() {
             if !node.visible {
@@ -326,6 +332,11 @@ impl App {
                 ui.id().with(&node.id),
                 egui::Sense::click_and_drag(),
             );
+
+            if response.dragged() {
+                any_dragged_node = true;
+                self.ui.dragged_node = Some(index);
+            }
 
             let current_time = ui.input(|i| i.time);
 
@@ -389,6 +400,10 @@ impl App {
                 // Save it for the top layer pass
                 nodes_to_draw_on_top.push((index, response));
             }
+        }
+
+        if !any_dragged_node {
+            self.ui.dragged_node = None;
         }
 
         // PASS 3: Draw highlighted (or normal) edges over dimmed nodes

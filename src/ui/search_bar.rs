@@ -225,11 +225,16 @@ impl App {
 
             let start_point_confirm_button = egui::Button::new("Confirm");
 
-            if ui
+            let confirm_clicked = ui
                 .add_enabled(!is_currently_fetching, start_point_confirm_button)
                 .on_hover_text("Build the graph from the entered information")
-                .clicked()
-            {
+                .clicked();
+
+            let enter_pressed = text_response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+
+            if (confirm_clicked || enter_pressed) && !is_currently_fetching {
+                egui::Popup::close_id(ui.ctx(), popup_id);
+
                 // log::info!("Requested Fetch! Type: {}, Input: {}", self.search.search_type.as_str(), self.search.search_input);
                 *self.search.search_failed.lock().unwrap() = false;
                 *self.search.is_fetching.lock().unwrap() = true;
