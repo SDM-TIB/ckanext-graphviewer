@@ -247,7 +247,26 @@ impl App {
                     });
 
                     ui.label(egui::RichText::new(
-                        "This tool offers you the ability to graphically view the content of the LDM KG. Start by selecting a start point and confirming it in the very top widget. After loading a starting point, the graph view will show that information graphically, the analytics view shows information about the loaded triples, and the node inspector view can show a tabular view of the information connected to a node. The export button exports the loaded data in different formats. The colour mode button gives you the ability to switch between light and dark mode themes. The graph in the graph view can be reset with Reset View. On the left is the legend and further information on graph controls."                    ).size(15.0));
+                        "This tool offers you the ability to graphically travers the content of the LDM KG."
+                    ).size(15.0));
+
+                    let features = [
+                        "Start by selecting a start point and confirming it in the very top widget.",
+                        "After loading a starting point, the Graph View will show that information graphically.",
+                        "The Analytics View shows information about the loaded triples.",
+                        "The Node Inspector View can show a tabular view of the information connected to a node.",
+                        "The Export button exports the loaded data in different formats.",
+                        "The Colour Mode button gives you the ability to switch between light and dark colour themes.",
+                        "The graph in the Graph View can be reset with the Reset View button.",
+                        "On the left is the Legend and further information on Graph Controls.",
+                    ];
+
+                    for feature in features {
+                        ui.horizontal(|ui| {
+                            ui.label(egui::RichText::new("•").size(15.0).strong());
+                            ui.label(egui::RichText::new(feature).size(15.0));
+                        });
+                    }
 
                 });
         }
