@@ -286,9 +286,11 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
 /// Reconstructs the N3 structure using the pure backend dataset rather than UI nodes
 pub fn generate_n3(triples: &[crate::parser::RawTriple]) -> String {
     let mut n3 = String::new();
+
     for t in triples {
         n3.push_str(&format!("{} {} {} .\n", t.subject, t.predicate, t.object));
     }
+
     n3
 }
 

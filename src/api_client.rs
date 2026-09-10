@@ -45,6 +45,9 @@ fn process_graph_update(
 
         // rebuild with new triples
         raw_triples.extend(new_triples);
+        raw_triples.sort();
+        raw_triples.dedup();
+
         let (mut new_nodes, mut new_edges) = graph_processor::build_ui_graph(raw_triples.clone(), None);
 
         // edge normalization
