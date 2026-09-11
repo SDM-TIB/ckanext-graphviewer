@@ -237,37 +237,50 @@ impl App {
                 .collapsible(false)
                 .resizable(false)
                 .title_bar(false)
-                .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+                .anchor(egui::Align2::CENTER_TOP, egui::vec2(0.0, 180.0))
                 .frame(window_frame)
                 .show(ui.ctx(), |ui| {
-                    ui.style_mut().visuals.override_text_color = Some(self.ui.theme.text_fg);
+                    ui.set_max_width(700.0);
 
                     ui.vertical_centered(|ui| {
-                        ui.heading(egui::RichText::new("Welcome to the LDM KG traversal Tool").size(18.0).strong());
+                        ui.heading(egui::RichText::new("Welcome to the LDM KG traversal Tool")
+                                   .size(18.0)
+                                   .color(self.ui.theme.text_fg)
+                                   .strong());
                     });
 
                     ui.label(egui::RichText::new(
                         "This tool offers you the ability to graphically travers the content of the LDM KG."
-                    ).size(15.0));
+                    ).size(15.0).color(self.ui.theme.text_fg));
 
                     let features = [
-                        "Start by selecting a start point and confirming it in the very top widget.",
-                        "After loading a starting point, the Graph View will show that information graphically.",
-                        "The Analytics View shows information about the loaded triples.",
-                        "The Node Inspector View can show a tabular view of the information connected to a node.",
-                        "The Export button exports the loaded data in different formats.",
-                        "The Colour Mode button gives you the ability to switch between light and dark colour themes.",
-                        "The graph in the Graph View can be reset with the Reset View button.",
-                        "On the left is the Legend and further information on Graph Controls.",
+                        vec![("Start by selecting a start point type (e.g., Author Name, Dataset Title, or DOI) from the dropdown in the top search bar.", false)],
+                        vec![("Enter your search term and click ", false), ("Confirm ", true), ("to query the knowledge graph and build the initial view.", false)],
+                        vec![("After loading a starting point, the ", false), ("Graph View ", true), ("will show that information graphically.", false)],
+                        vec![("The ", false), ("Analytics View ", true), ("shows information about the loaded triples.", false)],
+                        vec![("The ", false), ("Node Inspector View ", true), ("can show a tabular view of the information connected to a node.", false)],
+                        vec![("The ", false), ("Export ", true), ("button exports the loaded data in different formats.", false)],
+                        vec![("The ", false), ("Colour Mode ", true), ("button gives you the ability to switch between light and dark colour themes.", false)],
+                        vec![("The ", false), ("Reset View ", true), ("button loads a snapshot of the graph that was created after confirming a search.", false)],
+                        vec![("On the left is the ", false), ("Legend ", true), ("and further information on Graph ", false), ("Controls.", true)],
                     ];
 
-                    for feature in features {
-                        ui.horizontal(|ui| {
-                            ui.label(egui::RichText::new("•").size(15.0).strong());
-                            ui.label(egui::RichText::new(feature).size(15.0));
+                    for feature_segments in features {
+                        ui.horizontal_wrapped(|ui| {
+                            ui.spacing_mut().item_spacing.x = 0.0;
+                            ui.label(egui::RichText::new("• ").size(15.0).color(self.ui.theme.text_fg));
+
+                            for (text, is_bold) in feature_segments {
+                                let mut rich_text = egui::RichText::new(text).size(15.0);
+                                if is_bold {
+                                    rich_text = rich_text.color(self.ui.theme.menu_expand_bg);
+                                } else {
+                                    rich_text = rich_text.color(self.ui.theme.text_fg);
+                                }
+                                ui.label(rich_text);
+                            }
                         });
                     }
-
                 });
         }
 
