@@ -10,6 +10,9 @@
 | replace('%7B%7BLANG%7D%7D', '')
 | replace('//', '/')
 %}
+{% if root_path == '/' %}
+{% set root_path = '' %}
+{% endif  %}
 {% endif %}
 
 <div class="container" style="margin-top: 0px;">
