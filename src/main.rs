@@ -529,7 +529,7 @@ impl eframe::App for App {
                         };
                         if ui
                             .add(egui::Button::new("Analytics View").fill(analytics_bg))
-                            .on_hover_text("View statistical analytics for the leaded data")
+                            .on_hover_text("View statistical analytics of the loaded data")
                             .clicked()
                         {
                             self.ui.current_scene = crate::Scene::Analytics;
