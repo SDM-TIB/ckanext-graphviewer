@@ -137,6 +137,25 @@ kg_exploration:
 
 Traefik is deployed as a reverse proxy to resolve the routing between the container.
 
+```yaml
+traefik:
+  image: traefik:v3.7
+  container_name: traefik
+  command:
+    - "--providers.docker=true"
+    - "--providers.docker.exposedbydefault=false"
+    - "--entrypoints.web.address=:80"
+    - "--accesslog=true"
+    - "--accesslog.format=json"
+  ports:
+    - "80:80"
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  networks:
+    - ldmnetwork
+
+```
+
 ### Environment Configuration
 
 To ensure seamless communication between the frontend plugin and the backend services, specific environment variables must be exposed by CKAN.
@@ -164,7 +183,7 @@ git clone git@github.com:SDM-TIB/ckanext-graphviewer.git
 
 ``` bash
 cd ckanext-graphviewer
-ckan-pip install -e .
+pip install -e .
 ```
 
 #### enable the plugin
