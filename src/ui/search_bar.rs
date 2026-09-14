@@ -262,7 +262,7 @@ impl App {
 
                 let request = ehttp::Request::get(&target_url);
 
-                ehttp::fetch(request, move |response| {
+ehttp::fetch(request, move |response| {
                     let mut fetch_successful = false;
 
                     if let Ok(res) = response {
@@ -272,79 +272,16 @@ impl App {
                             if !new_triples.is_empty() {
                                 fetch_successful = true;
 
-                                let (temp_nodes, temp_edges) = crate::graph_processor::build_ui_graph(new_triples.clone(), Some(&input));
-
-                                let mut temp_node_map = std::collections::HashMap::new();
-                                for n in temp_nodes.iter() {
-                                    temp_node_map.insert(n.id.clone(), n.clone());
-                                }
-
-                                let mut temp_edge_vis = std::collections::HashSet::new();
-                                for e in temp_edges.iter() {
-                                    if e.visible {
-                                        let s_id = temp_nodes[e.source].id.clone();
-                                        let t_id = temp_nodes[e.target].id.clone();
-                                        temp_edge_vis.insert((s_id, t_id));
-                                    }
-                                }
-
-                                let mut combined_triples = Vec::new();
-                                let mut old_fetched = std::collections::HashSet::new();
-                                {
-                                    let current_state = state_clone.lock().unwrap();
-                                    if let crate::AppState::Ready {
-                                        raw_triples,
-                                        nodes: old_nodes,
-                                        ..
-                                    } = &*current_state
-                                    {
-                                        combined_triples.extend(raw_triples.clone());
-
-                                        for n in old_nodes {
-                                            if n.api_fetched {
-                                                old_fetched.insert(n.id.clone());
-                                            }
-                                        }
-                                    }
-                                }
-
-                                combined_triples.extend(new_triples.clone());
+                                // Build the new graph
+                                let mut combined_triples = new_triples.clone();
                                 combined_triples.sort();
                                 combined_triples.dedup();
 
-                                let (mut nodes, mut edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&input));
-
-                                for node in nodes.iter_mut() {
-                                    if let Some(temp_n) = temp_node_map.get(&node.id) {
-                                        node.pos = temp_n.pos;
-                                        node.original_pos = temp_n.original_pos;
-                                        node.visible = temp_n.visible;
-                                        node.expanded = temp_n.expanded;
-                                    } else {
-                                        node.visible = false;
-                                        node.expanded = false;
-                                    }
-
-                                    if old_fetched.contains(&node.id) {
-                                        node.api_fetched = true;
-                                    }
-                                }
-
-                                for edge in edges.iter_mut() {
-                                    let s_id = &nodes[edge.source].id;
-                                    let t_id = &nodes[edge.target].id;
-
-                                    if temp_edge_vis.contains(&(s_id.clone(), t_id.clone()))
-                                        || temp_edge_vis.contains(&(t_id.clone(), s_id.clone()))
-                                    {
-                                        edge.visible = true;
-                                    } else {
-                                        edge.visible = false;
-                                    }
-                                }
+                                let (nodes, edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&input));
 
                                 let init_snapshot = crate::GraphSnapshot::new(&nodes, &edges);
 
+                                // Replace the old state
                                 *state_clone.lock().unwrap() = crate::AppState::Ready {
                                     nodes,
                                     edges,
