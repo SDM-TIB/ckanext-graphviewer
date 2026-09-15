@@ -181,7 +181,8 @@ impl Theme {
     }
 
     pub fn to_egui_visuals(&self) -> Visuals {
-        let mut visuals = if self.master_bg == Color32::from_rgb(240, 240, 245) {
+        let mut visuals = if self.master_bg == Color32::from_rgb(240, 240, 245)
+        {
             Visuals::light()
         } else {
             Visuals::dark()
@@ -224,7 +225,8 @@ impl Theme {
         visuals.selection.stroke = Stroke::new(1.0_f32, self.text_fg);
 
         // The blinking cursor in the search bar
-        visuals.text_cursor.stroke = eframe::egui::Stroke::new(2.0_f32, self.text_fg);
+        visuals.text_cursor.stroke =
+            eframe::egui::Stroke::new(2.0_f32, self.text_fg);
 
         // Hyperlinks (We'll borrow your blue/red expand button color as an accent!)
         visuals.hyperlink_color = self.menu_expand_bg;

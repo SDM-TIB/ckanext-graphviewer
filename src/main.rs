@@ -125,7 +125,10 @@ impl GraphSnapshot {
         }
         for e in edges {
             if e.visible {
-                visible_edges.insert((nodes[e.source].id.clone(), nodes[e.target].id.clone()));
+                visible_edges.insert((
+                    nodes[e.source].id.clone(),
+                    nodes[e.target].id.clone(),
+                ));
             }
         }
 
@@ -218,10 +221,19 @@ pub fn get_api_url() -> String {
             }
         }
 
-        if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
-            let port_str = if port.is_empty() { String::new() } else { format!(":{}", port) };
+        if let (Ok(protocol), Ok(hostname), Ok(port)) =
+            (location.protocol(), location.hostname(), location.port())
+        {
+            let port_str = if port.is_empty() {
+                String::new()
+            } else {
+                format!(":{}", port)
+            };
 
-            return format!("{}//{}{}{}{}", protocol, hostname, port_str, root_path, sub_path);
+            return format!(
+                "{}//{}{}{}{}",
+                protocol, hostname, port_str, root_path, sub_path
+            );
         }
     }
     // Fallback if browser APIs fail
@@ -248,10 +260,19 @@ pub fn get_dynamic_ckan_url() -> String {
             }
         }
 
-        if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
-            let port_str = if port.is_empty() { String::new() } else { format!(":{}", port) };
+        if let (Ok(protocol), Ok(hostname), Ok(port)) =
+            (location.protocol(), location.hostname(), location.port())
+        {
+            let port_str = if port.is_empty() {
+                String::new()
+            } else {
+                format!(":{}", port)
+            };
 
-            return format!("{}//{}{}{}", protocol, hostname, port_str, root_path);
+            return format!(
+                "{}//{}{}{}",
+                protocol, hostname, port_str, root_path
+            );
         }
     }
     // Fallback if browser APIs fail
@@ -286,7 +307,9 @@ pub fn get_n3_url_from_dom() -> Option<String> {
         }
     }
 
-    if let (Ok(protocol), Ok(hostname), Ok(port)) = (location.protocol(), location.hostname(), location.port()) {
+    if let (Ok(protocol), Ok(hostname), Ok(port)) =
+        (location.protocol(), location.hostname(), location.port())
+    {
         // Construct the target URL pointing to your Python FastAPI port
         origin = format!("{}//{}:{}", protocol, hostname, port);
     }
@@ -317,7 +340,11 @@ impl App {
             #[cfg(target_arch = "wasm32")]
             {
                 web_sys::window()
-                    .and_then(|w| w.match_media("(prefers-color-scheme: dark)").ok().flatten())
+                    .and_then(|w| {
+                        w.match_media("(prefers-color-scheme: dark)")
+                            .ok()
+                            .flatten()
+                    })
                     .map(|m| m.matches())
                     .unwrap_or(true) // Default to dark if detection fails
             }
@@ -366,21 +393,31 @@ impl App {
                     Ok(res) => {
                         if let Some(text) = res.text() {
                             let raw_triples = parser::parse_n3_file(&text);
-                            let (nodes, edges) = graph_processor::build_ui_graph(raw_triples.clone(), None);
-                            let init_snapshot = GraphSnapshot::new(&nodes, &edges);
+                            let (nodes, edges) =
+                                graph_processor::build_ui_graph(
+                                    raw_triples.clone(),
+                                    None,
+                                );
+                            let init_snapshot =
+                                GraphSnapshot::new(&nodes, &edges);
 
-                            *state_guard_clone.lock().unwrap() = AppState::Ready {
-                                nodes,
-                                edges,
-                                raw_triples,
-                                init_snapshot,
-                            };
+                            *state_guard_clone.lock().unwrap() =
+                                AppState::Ready {
+                                    nodes,
+                                    edges,
+                                    raw_triples,
+                                    init_snapshot,
+                                };
                         } else {
-                            *state_guard_clone.lock().unwrap() = AppState::Error("failed to read text from n3".into());
+                            *state_guard_clone.lock().unwrap() =
+                                AppState::Error(
+                                    "failed to read text from n3".into(),
+                                );
                         }
                     }
                     Err(err) => {
-                        *state_guard_clone.lock().unwrap() = AppState::Error(format!("Network Error: {}", err));
+                        *state_guard_clone.lock().unwrap() =
+                            AppState::Error(format!("Network Error: {}", err));
                     }
                 }
                 ctx_guard_clone.request_repaint();
@@ -418,8 +455,16 @@ impl App {
                 current_offset: 0,
             },
             ui: UIState {
-                theme: if is_system_dark { Theme::dark() } else { Theme::light() },
-                theme_mode: if is_system_dark { ThemeMode::Dark } else { ThemeMode::Light },
+                theme: if is_system_dark {
+                    Theme::dark()
+                } else {
+                    Theme::light()
+                },
+                theme_mode: if is_system_dark {
+                    ThemeMode::Dark
+                } else {
+                    ThemeMode::Light
+                },
                 current_scene: Scene::Graph,
                 zoom: 1.0,
                 pan: egui::vec2(0.0, 0.0),
@@ -438,34 +483,52 @@ impl App {
     pub fn trigger_autocomplete_fetch(&self) {
         // 1. Determine which Solr field we are querying based on the dropdown
         let (field, value) = match self.search.search_type {
-            SearchType::AuthorName => ("author", urlencoding::encode(&self.search.search_input).into_owned()),
-            SearchType::DatasetTitle => ("title", urlencoding::encode(&self.search.search_input).into_owned()),
+            SearchType::AuthorName => (
+                "author",
+                urlencoding::encode(&self.search.search_input).into_owned(),
+            ),
+            SearchType::DatasetTitle => (
+                "title",
+                urlencoding::encode(&self.search.search_input).into_owned(),
+            ),
             _ => return, // Ignore auto-complete for other search types
         };
 
         let query_string = format!(
             "?q={}:{}~&fl={}&rows={}&start={}",
-            field, value, field, self.config.rows_per_page, self.search.current_offset
+            field,
+            value,
+            field,
+            self.config.rows_per_page,
+            self.search.current_offset
         );
 
         // Hitting the CKAN endpoint directly for suggestions
-        let request = ehttp::Request::get(format!("{}/api/3/action/package_search{}", self.config.ckan_url, query_string));
+        let request = ehttp::Request::get(format!(
+            "{}/api/3/action/package_search{}",
+            self.config.ckan_url, query_string
+        ));
 
         let tx = self.search.autocomplete_tx.clone();
         let search_type_clone = self.search.search_type.clone();
 
         ehttp::fetch(request, move |result| {
             if let Ok(message) = result {
-                if let Ok(parsed_data) = serde_json::from_slice::<CkanResponse>(&message.bytes) {
+                if let Ok(parsed_data) =
+                    serde_json::from_slice::<CkanResponse>(&message.bytes)
+                {
                     let mut new_results = Vec::new();
                     for dataset in parsed_data.result.results {
                         // 2. Extract the correct field from the JSON response
                         if search_type_clone == SearchType::AuthorName {
                             if let Some(val) = dataset.author {
-                                let cleaned_name = crate::format_author_name(&val);
-                                new_results.push(FoundString { name: cleaned_name });
+                                let cleaned_name =
+                                    crate::format_author_name(&val);
+                                new_results
+                                    .push(FoundString { name: cleaned_name });
                             }
-                        } else if search_type_clone == SearchType::DatasetTitle {
+                        } else if search_type_clone == SearchType::DatasetTitle
+                        {
                             if let Some(val) = dataset.title {
                                 new_results.push(FoundString { name: val });
                             }
@@ -677,7 +740,11 @@ fn main() -> eframe::Result<()> {
         ..Default::default()
     };
 
-    eframe::run_native("Standalone Test App", native_options, Box::new(|cc| Ok(Box::new(App::new(cc)))))
+    eframe::run_native(
+        "Standalone Test App",
+        native_options,
+        Box::new(|cc| Ok(Box::new(App::new(cc)))),
+    )
 }
 
 // wasm entrypoint
@@ -710,7 +777,11 @@ fn main() {
             .expect("Element was not a HtmlCanvasElement");
 
         eframe::WebRunner::new()
-            .start(canvas, web_options, Box::new(|cc| Ok(Box::new(App::new(cc)))))
+            .start(
+                canvas,
+                web_options,
+                Box::new(|cc| Ok(Box::new(App::new(cc)))),
+            )
             .await
             .expect("failed to start eframe");
     });

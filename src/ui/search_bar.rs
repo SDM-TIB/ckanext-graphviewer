@@ -5,13 +5,17 @@ use eframe::egui;
 use log::{debug, error, info, trace, warn};
 
 /* the search bar is on its own just one ui.horizontal element which
-  houses a label a combobox and a text edit and a button as well as the progressinfo label
-  when the uses inputs text in the author name or dataset name fiels a query against the ckan
-  instance is execute to show suggestions
-*/
+houses a label a combobox and a text edit and a button as well as the progressinfo label
+when the uses inputs text in the author name or dataset name fiels a query against the ckan
+instance is execute to show suggestions
+ */
 
 impl App {
-    pub fn render_search_bar(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+    pub fn render_search_bar(
+        &mut self,
+        ui: &mut egui::Ui,
+        ctx: &egui::Context,
+    ) {
         // disable search bar when opened from dataset
         if !self.config.is_global_viewer {
             return;
@@ -262,7 +266,7 @@ impl App {
 
                 let request = ehttp::Request::get(&target_url);
 
-ehttp::fetch(request, move |response| {
+                ehttp::fetch(request, move |response| {
                     let mut fetch_successful = false;
 
                     if let Ok(res) = response {

@@ -36,7 +36,11 @@ pub struct Edge {
 
 fn extract_label(uri_or_literal: &str) -> String {
     if uri_or_literal.starts_with('"') {
-        return uri_or_literal.split('"').nth(1).unwrap_or(uri_or_literal).to_string();
+        return uri_or_literal
+            .split('"')
+            .nth(1)
+            .unwrap_or(uri_or_literal)
+            .to_string();
     }
     let cleaned = uri_or_literal.trim_matches('<').trim_matches('>');
     cleaned
@@ -49,23 +53,34 @@ fn extract_label(uri_or_literal: &str) -> String {
         .to_string()
 }
 
-pub fn build_ui_graph(triples: Vec<RawTriple>, preferred_center: Option<&str>) -> (Vec<Node>, Vec<Edge>) {
+pub fn build_ui_graph(
+    triples: Vec<RawTriple>,
+    preferred_center: Option<&str>,
+) -> (Vec<Node>, Vec<Edge>) {
     let (mut nodes_map, edges_map) = build_topology(&triples);
 
-    let start_node = determine_start_node(&nodes_map, &edges_map, preferred_center);
+    let start_node =
+        determine_start_node(&nodes_map, &edges_map, preferred_center);
 
     apply_circular_layout(&mut nodes_map, &edges_map, &start_node);
     finalize_graph(nodes_map, edges_map, &start_node)
 }
 
-fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(String, String), Vec<String>>) {
+fn build_topology(
+    triples: &[RawTriple],
+) -> (
+    HashMap<String, Node>,
+    HashMap<(String, String), Vec<String>>,
+) {
     let mut nodes_map: HashMap<String, Node> = HashMap::new();
     let mut edges_map: HashMap<(String, String), Vec<String>> = HashMap::new();
 
     // 1. pass nodes
     for pt in triples {
-        let clean_sub = pt.subject.trim_matches('<').trim_matches('>').to_string();
-        let clean_pred = pt.predicate.trim_matches('<').trim_matches('>').to_string();
+        let clean_sub =
+            pt.subject.trim_matches('<').trim_matches('>').to_string();
+        let clean_pred =
+            pt.predicate.trim_matches('<').trim_matches('>').to_string();
         let pred_label = extract_label(&pt.predicate);
         let clean_obj = if pt.is_object_literal {
             pt.object.clone()
@@ -103,7 +118,11 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
 
         let is_type_pred = clean_pred == RDF_TYPE;
 
-        if pred_label != PRED_LABEL && pred_label != PRED_TITLE && pred_label != PRED_FN && !is_type_pred {
+        if pred_label != PRED_LABEL
+            && pred_label != PRED_TITLE
+            && pred_label != PRED_FN
+            && !is_type_pred
+        {
             nodes_map.entry(clean_obj.clone()).or_insert_with(|| Node {
                 id: clean_obj.clone(),
                 label: extract_label(&clean_obj),
@@ -131,7 +150,8 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
         }
 
         if let Some(node) = nodes_map.get_mut(&clean_sub) {
-            node.properties.push((pred_label.clone(), clean_obj.clone()));
+            node.properties
+                .push((pred_label.clone(), clean_obj.clone()));
         }
 
         if is_type_pred {
@@ -140,7 +160,9 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
                     node.rdf_type.push_str(", ");
                 }
                 node.rdf_type.push_str(&clean_obj);
-                if clean_obj.contains("Dataset") || clean_obj.contains("DataService") {
+                if clean_obj.contains("Dataset")
+                    || clean_obj.contains("DataService")
+                {
                     node.visible = true;
                 }
             }
@@ -153,8 +175,10 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
 
     // 2. pass edges
     for pt in triples {
-        let clean_sub = pt.subject.trim_matches('<').trim_matches('>').to_string();
-        let clean_pred = pt.predicate.trim_matches('<').trim_matches('>').to_string();
+        let clean_sub =
+            pt.subject.trim_matches('<').trim_matches('>').to_string();
+        let clean_pred =
+            pt.predicate.trim_matches('<').trim_matches('>').to_string();
         let pred_label = extract_label(&pt.predicate);
         let clean_obj = if pt.is_object_literal {
             pt.object.clone()
@@ -181,7 +205,9 @@ fn build_topology(triples: &[RawTriple]) -> (HashMap<String, Node>, HashMap<(Str
 
         // handel author creator
         if pred_label == PRED_CREATOR {
-            if let (Some(dataset_node), Some(person_node)) = (nodes_map.get(&clean_sub), nodes_map.get(&clean_obj)) {
+            if let (Some(dataset_node), Some(person_node)) =
+                (nodes_map.get(&clean_sub), nodes_map.get(&clean_obj))
+            {
                 let mut dataset_author_name = None;
                 for (k, v) in &dataset_node.properties {
                     if k == PRED_FN || k.contains(PRED_VCARD_FN) {
@@ -210,7 +236,10 @@ fn determine_start_node(
     preferred_center: Option<&str>,
 ) -> String {
     if let Some(query) = preferred_center {
-        if let Some((id, _)) = nodes_map.iter().find(|(id, n)| n.label == query || *id == query) {
+        if let Some((id, _)) = nodes_map
+            .iter()
+            .find(|(id, n)| n.label == query || *id == query)
+        {
             return id.clone();
         }
     }
@@ -233,7 +262,9 @@ fn determine_start_node(
             .into_iter()
             .max_by_key(|id| {
                 let base_deg = *degree_map.get(id).unwrap_or(&0);
-                let is_author = nodes_map.get(id).map_or(false, |n| n.rdf_type.contains("Author"));
+                let is_author = nodes_map
+                    .get(id)
+                    .map_or(false, |n| n.rdf_type.contains("Author"));
                 if is_author { base_deg + 1000 } else { base_deg }
             })
             .unwrap()
@@ -242,11 +273,17 @@ fn determine_start_node(
             .into_iter()
             .max_by_key(|(_, deg)| *deg)
             .map(|(id, _)| id)
-            .unwrap_or_else(|| nodes_map.keys().next().cloned().unwrap_or_default())
+            .unwrap_or_else(|| {
+                nodes_map.keys().next().cloned().unwrap_or_default()
+            })
     }
 }
 
-fn apply_circular_layout(nodes_map: &mut HashMap<String, Node>, edges_map: &HashMap<(String, String), Vec<String>>, start_node: &str) {
+fn apply_circular_layout(
+    nodes_map: &mut HashMap<String, Node>,
+    edges_map: &HashMap<(String, String), Vec<String>>,
+    start_node: &str,
+) {
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
     for (src, tgt) in edges_map.keys() {
         adjacency.entry(src.clone()).or_default().push(tgt.clone());
@@ -263,19 +300,37 @@ fn apply_circular_layout(nodes_map: &mut HashMap<String, Node>, edges_map: &Hash
         visited.insert(start_node.to_string());
 
         let mut queue = VecDeque::new();
-        queue.push_back((start_node.to_string(), root_pos, 250.0, 0.0, std::f32::consts::TAU));
+        queue.push_back((
+            start_node.to_string(),
+            root_pos,
+            250.0,
+            0.0,
+            std::f32::consts::TAU,
+        ));
 
-        while let Some((curr_id, parent_pos, radius, start_angle, end_angle)) = queue.pop_front() {
+        while let Some((curr_id, parent_pos, radius, start_angle, end_angle)) =
+            queue.pop_front()
+        {
             if let Some(children) = adjacency.get(&curr_id) {
-                let unvisited_children: Vec<String> = children.iter().filter(|c| !visited.contains(*c)).cloned().collect();
+                let unvisited_children: Vec<String> = children
+                    .iter()
+                    .filter(|c| !visited.contains(*c))
+                    .cloned()
+                    .collect();
                 let n = unvisited_children.len();
 
                 if n > 0 {
                     let angle_step = (end_angle - start_angle) / (n as f32);
-                    for (i, child_id) in unvisited_children.into_iter().enumerate() {
+                    for (i, child_id) in
+                        unvisited_children.into_iter().enumerate()
+                    {
                         visited.insert(child_id.clone());
-                        let child_angle = start_angle + (i as f32 + 0.5) * angle_step;
-                        let child_pos = egui::pos2(parent_pos.x + radius * child_angle.cos(), parent_pos.y + radius * child_angle.sin());
+                        let child_angle =
+                            start_angle + (i as f32 + 0.5) * angle_step;
+                        let child_pos = egui::pos2(
+                            parent_pos.x + radius * child_angle.cos(),
+                            parent_pos.y + radius * child_angle.sin(),
+                        );
                         if let Some(node) = nodes_map.get_mut(&child_id) {
                             node.pos = child_pos;
                         }
@@ -354,7 +409,9 @@ fn finalize_graph(
 
         processed_edges.insert(key.clone());
 
-        if let (Some(&source_idx), Some(&target_idx)) = (id_to_index.get(source_id), id_to_index.get(target_id)) {
+        if let (Some(&source_idx), Some(&target_idx)) =
+            (id_to_index.get(source_id), id_to_index.get(target_id))
+        {
             edges.push(Edge {
                 source: source_idx,
                 target: target_idx,

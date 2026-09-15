@@ -18,42 +18,61 @@ impl App {
 
         // render graph controls bar and buttons
         ui.horizontal(|ui| {
-            ui.label(egui::RichText::new("Graph Controls:").color(self.ui.theme.text_fg));
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                let reset_view_button =
-                    egui::Button::new(egui::RichText::new("Reset View").color(self.ui.theme.text_fg)).fill(self.ui.theme.button_bg);
+            ui.label(
+                egui::RichText::new("Graph Controls:")
+                    .color(self.ui.theme.text_fg),
+            );
+            ui.with_layout(
+                egui::Layout::right_to_left(egui::Align::Center),
+                |ui| {
+                    let reset_view_button = egui::Button::new(
+                        egui::RichText::new("Reset View")
+                            .color(self.ui.theme.text_fg),
+                    )
+                    .fill(self.ui.theme.button_bg);
 
-                // restore the view configuration of the inital snapshot
-                if ui
-                    .add(reset_view_button)
-                    .on_hover_text("Reset the graph view to the initial snapshot")
-                    .clicked()
-                {
-                    self.ui.zoom = 1.0;
-                    self.ui.pan = egui::vec2(0.0, 0.0);
-                    self.ui.selected_node = None;
+                    // restore the view configuration of the inital snapshot
+                    if ui
+                        .add(reset_view_button)
+                        .on_hover_text(
+                            "Reset the graph view to the initial snapshot",
+                        )
+                        .clicked()
+                    {
+                        self.ui.zoom = 1.0;
+                        self.ui.pan = egui::vec2(0.0, 0.0);
+                        self.ui.selected_node = None;
 
-                    for node in nodes.iter_mut() {
-                        if let Some(&pos) = init_snapshot.node_positions.get(&node.id) {
-                            node.pos = pos;
-                        } else {
-                            node.pos = node.original_pos;
+                        for node in nodes.iter_mut() {
+                            if let Some(&pos) =
+                                init_snapshot.node_positions.get(&node.id)
+                            {
+                                node.pos = pos;
+                            } else {
+                                node.pos = node.original_pos;
+                            }
+                            node.visible =
+                                init_snapshot.visible_nodes.contains(&node.id);
+                            node.expanded =
+                                init_snapshot.expanded_nodes.contains(&node.id);
                         }
-                        node.visible = init_snapshot.visible_nodes.contains(&node.id);
-                        node.expanded = init_snapshot.expanded_nodes.contains(&node.id);
+
+                        for edge in edges.iter_mut() {
+                            let s_id = &nodes[edge.source].id;
+                            let t_id = &nodes[edge.target].id;
+
+                            edge.visible = init_snapshot
+                                .visible_edges
+                                .contains(&(s_id.clone(), t_id.clone()))
+                                || init_snapshot
+                                    .visible_edges
+                                    .contains(&(t_id.clone(), s_id.clone()));
+                        }
+
+                        *init_snapshot = GraphSnapshot::new(nodes, edges);
                     }
-
-                    for edge in edges.iter_mut() {
-                        let s_id = &nodes[edge.source].id;
-                        let t_id = &nodes[edge.target].id;
-
-                        edge.visible = init_snapshot.visible_edges.contains(&(s_id.clone(), t_id.clone()))
-                            || init_snapshot.visible_edges.contains(&(t_id.clone(), s_id.clone()));
-                    }
-
-                    *init_snapshot = GraphSnapshot::new(nodes, edges);
-                }
-            });
+                },
+            );
         });
         ui.add_space(3.0);
 
@@ -63,7 +82,11 @@ impl App {
                 .num_columns(2)
                 .spacing([10.0, 4.0])
                 .show(ui, |ui| {
-                    let display_id = if node.node_type == "Attribute" { &node.label } else { &node.id };
+                    let display_id = if node.node_type == "Attribute" {
+                        &node.label
+                    } else {
+                        &node.id
+                    };
 
                     if !display_id.is_empty() {
                         ui.strong("ID:");
@@ -83,7 +106,8 @@ impl App {
 
                     let mut seen_props = std::collections::HashSet::new();
 
-                    for (i, (key, value)) in node.properties.iter().enumerate() {
+                    for (i, (key, value)) in node.properties.iter().enumerate()
+                    {
                         if !seen_props.insert((key.clone(), value.clone())) {
                             continue;
                         }
@@ -92,7 +116,10 @@ impl App {
                             let mut c = key.chars();
                             match c.next() {
                                 None => String::new(),
-                                Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+                                Some(f) => {
+                                    f.to_uppercase().collect::<String>()
+                                        + c.as_str()
+                                }
                             }
                         };
 
@@ -100,7 +127,10 @@ impl App {
 
                         if value.len() > 60 {
                             egui::ScrollArea::vertical()
-                                .id_salt(format!("scroll_prop_{}_{}", node.id, i))
+                                .id_salt(format!(
+                                    "scroll_prop_{}_{}",
+                                    node.id, i
+                                ))
                                 .max_height(100.0)
                                 .min_scrolled_height(0.0)
                                 .show(ui, |ui| {
@@ -128,7 +158,8 @@ impl App {
             .resizable(false)
             .frame(combined_outline)
             .show(ui.ctx(), |ui| {
-                ui.style_mut().visuals.override_text_color = Some(self.ui.theme.text_fg);
+                ui.style_mut().visuals.override_text_color =
+                    Some(self.ui.theme.text_fg);
 
                 let inner_frame = egui::Frame::NONE
                     .inner_margin(5.0)
@@ -137,54 +168,86 @@ impl App {
                     .fill(self.ui.theme.master_bg);
 
                 // legend
-                egui::CollapsingHeader::new(egui::RichText::new("Legend").color(self.ui.theme.text_fg))
-                    .default_open(false)
-                    .show(ui, |ui| {
-                        inner_frame.show(ui, |ui| {
-                            egui::Grid::new("legend_grid").num_columns(2).spacing([10.0, 8.0]).show(ui, |ui| {
+                egui::CollapsingHeader::new(
+                    egui::RichText::new("Legend").color(self.ui.theme.text_fg),
+                )
+                .default_open(false)
+                .show(ui, |ui| {
+                    inner_frame.show(ui, |ui| {
+                        egui::Grid::new("legend_grid")
+                            .num_columns(2)
+                            .spacing([10.0, 8.0])
+                            .show(ui, |ui| {
                                 for (uri, colors) in &self.ui.theme.node_map {
-                                    let display_name = uri.split('#').last().unwrap_or(uri);
-                                    let display_name = display_name.split('/').last().unwrap_or(display_name);
+                                    let display_name =
+                                        uri.split('#').last().unwrap_or(uri);
+                                    let display_name = display_name
+                                        .split('/')
+                                        .last()
+                                        .unwrap_or(display_name);
 
-                                    let (rect, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
-                                    ui.painter().circle_filled(rect.center(), 6.0, colors.normal);
+                                    let (rect, _) = ui.allocate_exact_size(
+                                        egui::vec2(12.0, 12.0),
+                                        egui::Sense::hover(),
+                                    );
+                                    ui.painter().circle_filled(
+                                        rect.center(),
+                                        6.0,
+                                        colors.normal,
+                                    );
 
                                     ui.label(display_name);
                                     ui.end_row();
                                 }
 
-                                let (rect, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
-                                ui.painter().circle_filled(rect.center(), 6.0, self.ui.theme.default_node.normal);
+                                let (rect, _) = ui.allocate_exact_size(
+                                    egui::vec2(12.0, 12.0),
+                                    egui::Sense::hover(),
+                                );
+                                ui.painter().circle_filled(
+                                    rect.center(),
+                                    6.0,
+                                    self.ui.theme.default_node.normal,
+                                );
                                 ui.label("Other");
                                 ui.end_row();
                             });
-                        });
                     });
+                });
 
                 // controles
-                egui::CollapsingHeader::new(egui::RichText::new("Controls").color(self.ui.theme.text_fg))
-                    .default_open(false)
-                    .show(ui, |ui| {
-                        inner_frame.show(ui, |ui| {
-                            egui::Grid::new("controls_window_grid")
-                                .num_columns(2)
-                                .spacing([20.0, 8.0])
-                                .show(ui, |ui| {
-                                    ui.strong("Move Camera:"); ui.label("Left-click and drag background");
-                                    ui.end_row();
-                                    ui.strong("Zoom Camera:"); ui.label("Scroll wheel or pinch");
-                                    ui.end_row();
-                                    ui.strong("Move Node:"); ui.label("Left-click and drag a node");
-                                    ui.end_row();
-                                    ui.strong("Open Infobox of a node:"); ui.label("Single left-click a node");
-                                    ui.end_row();
-                                    ui.strong("Expand / Collaps a node:"); ui.label("Double left-click a node");
-                                    ui.end_row();
-                                    ui.strong("Open Context Menu of a node:"); ui.label("Right-click a node");
-                                    ui.end_row();
-                                });
-                        });
+                egui::CollapsingHeader::new(
+                    egui::RichText::new("Controls")
+                        .color(self.ui.theme.text_fg),
+                )
+                .default_open(false)
+                .show(ui, |ui| {
+                    inner_frame.show(ui, |ui| {
+                        egui::Grid::new("controls_window_grid")
+                            .num_columns(2)
+                            .spacing([20.0, 8.0])
+                            .show(ui, |ui| {
+                                ui.strong("Move Camera:");
+                                ui.label("Left-click and drag background");
+                                ui.end_row();
+                                ui.strong("Zoom Camera:");
+                                ui.label("Scroll wheel or pinch");
+                                ui.end_row();
+                                ui.strong("Move Node:");
+                                ui.label("Left-click and drag a node");
+                                ui.end_row();
+                                ui.strong("Open Infobox of a node:");
+                                ui.label("Single left-click a node");
+                                ui.end_row();
+                                ui.strong("Expand / Collaps a node:");
+                                ui.label("Double left-click a node");
+                                ui.end_row();
+                                ui.strong("Open Context Menu of a node:");
+                                ui.label("Right-click a node");
+                                ui.end_row();
+                            });
                     });
+                });
             });
 
         // initialize viewport space and canvas constraints
@@ -195,7 +258,11 @@ impl App {
         let screen_center = area_to_fill.center().to_vec2();
 
         // background panning
-        let background_response = ui.interact(background_rect, ui.id().with("background"), egui::Sense::click_and_drag());
+        let background_response = ui.interact(
+            background_rect,
+            ui.id().with("background"),
+            egui::Sense::click_and_drag(),
+        );
         if background_response.dragged() {
             self.ui.pan += background_response.drag_delta();
         }
@@ -215,16 +282,20 @@ impl App {
         if zoom_multiplier != 1.0 {
             if let Some(pointer_pos) = ui.ctx().pointer_hover_pos() {
                 let pointer_vec = pointer_pos.to_vec2();
-                let graph_pos = (pointer_vec - screen_center - self.ui.pan) / self.ui.zoom;
+                let graph_pos =
+                    (pointer_vec - screen_center - self.ui.pan) / self.ui.zoom;
 
                 self.ui.zoom *= zoom_multiplier;
                 self.ui.zoom = self.ui.zoom.clamp(0.1, 5.0);
-                self.ui.pan = pointer_vec - screen_center - graph_pos * self.ui.zoom;
+                self.ui.pan =
+                    pointer_vec - screen_center - graph_pos * self.ui.zoom;
             }
         }
 
         // map internal graph positions to pixel space
-        let to_screen = |p: egui::Pos2| -> egui::Pos2 { (screen_center + self.ui.pan + p.to_vec2() * self.ui.zoom).to_pos2() };
+        let to_screen = |p: egui::Pos2| -> egui::Pos2 {
+            (screen_center + self.ui.pan + p.to_vec2() * self.ui.zoom).to_pos2()
+        };
         let painter = ui.painter().with_clip_rect(area_to_fill);
 
         painter.rect_filled(area_to_fill, 0.0, self.ui.theme.painter_bg);
@@ -303,7 +374,10 @@ impl App {
                     }
                     let screen_pos = to_screen(node.pos);
                     let radius = 15.0 * self.ui.zoom;
-                    let rect = egui::Rect::from_center_size(screen_pos, egui::vec2(radius * 2.0, radius * 2.0));
+                    let rect = egui::Rect::from_center_size(
+                        screen_pos,
+                        egui::vec2(radius * 2.0, radius * 2.0),
+                    );
                     if rect.contains(pointer_pos) {
                         hovered_node = Some(index);
                         break;
@@ -331,7 +405,9 @@ impl App {
                             pt_vec.length()
                         } else {
                             // find the projection point on the line using vector dot products, clamped between 0.0 and 1.0
-                            let t = (pt_vec.x * line_vec.x + pt_vec.y * line_vec.y) / line_len_sq;
+                            let t = (pt_vec.x * line_vec.x
+                                + pt_vec.y * line_vec.y)
+                                / line_len_sq;
                             let t = t.clamp(0.0, 1.0);
                             let proj = p1 + line_vec * t;
                             (pointer_pos - proj).length()
@@ -349,7 +425,8 @@ impl App {
         // highlighted edges and nodes
         let mut connected_nodes = std::collections::HashSet::new();
         let mut connected_edges = std::collections::HashSet::new();
-        let is_hovering_something = hovered_node.is_some() || hovered_edge.is_some();
+        let is_hovering_something =
+            hovered_node.is_some() || hovered_edge.is_some();
 
         if let Some(hovered_idx) = hovered_node {
             connected_nodes.insert(hovered_idx);
@@ -384,7 +461,15 @@ impl App {
             let is_dimmed = is_hovering_something && !is_connected_edge;
 
             if is_dimmed {
-                crate::draw_edge!(edge, is_connected_edge, true, self, painter, nodes, to_screen);
+                crate::draw_edge!(
+                    edge,
+                    is_connected_edge,
+                    true,
+                    self,
+                    painter,
+                    nodes,
+                    to_screen
+                );
             }
         }
 
@@ -406,7 +491,10 @@ impl App {
             let radius = 15.0 * self.ui.zoom;
 
             let response = ui.interact(
-                egui::Rect::from_center_size(screen_pos, egui::vec2(radius * 2.0, radius * 2.0)),
+                egui::Rect::from_center_size(
+                    screen_pos,
+                    egui::vec2(radius * 2.0, radius * 2.0),
+                ),
                 ui.id().with(&node.id),
                 egui::Sense::click_and_drag(),
             );
@@ -426,14 +514,24 @@ impl App {
             }
 
             if response.double_clicked() {
-                let is_fetchable = node.rdf_type.contains(crate::constants::TYPE_AUTHOR)
-                    || node.rdf_type.contains(crate::constants::TYPE_DATASERVICE)
+                let is_fetchable = node
+                    .rdf_type
+                    .contains(crate::constants::TYPE_AUTHOR)
+                    || node
+                        .rdf_type
+                        .contains(crate::constants::TYPE_DATASERVICE)
                     || node.rdf_type.contains(crate::constants::TYPE_DATASET)
                     || node.rdf_type.contains(crate::constants::TYPE_CONCEPT)
-                    || node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION);
+                    || node
+                        .rdf_type
+                        .contains(crate::constants::TYPE_ORGANIZATION);
 
                 let needs_fetch = is_fetchable
-                    && (!node.api_fetched || (node.rdf_type.contains(crate::constants::TYPE_ORGANIZATION) && node.has_more_to_fetch));
+                    && (!node.api_fetched
+                        || (node
+                            .rdf_type
+                            .contains(crate::constants::TYPE_ORGANIZATION)
+                            && node.has_more_to_fetch));
 
                 if needs_fetch {
                     clicked_to_fetch = Some(index);
@@ -457,7 +555,9 @@ impl App {
             if self.ui.pending_click_node == Some(index) {
                 // timer implementation to differentiate a single click (open infobox) from a double click
                 if (current_time - self.ui.pending_click_time) > 0.25 {
-                    if self.ui.selected_node == Some(index) && !self.ui.show_menu {
+                    if self.ui.selected_node == Some(index)
+                        && !self.ui.show_menu
+                    {
                         self.ui.selected_node = None;
                     } else {
                         self.ui.selected_node = Some(index);
@@ -469,12 +569,24 @@ impl App {
                 }
             }
 
-            let is_highlighted = hovered_node == Some(index) || connected_nodes.contains(&index);
+            let is_highlighted =
+                hovered_node == Some(index) || connected_nodes.contains(&index);
             let is_dimmed = is_hovering_something && !is_highlighted;
 
             if is_dimmed {
                 // dimmed nodes are drawn immediately (above dimmed edges but below active elements)
-                crate::draw_node!(index, node, response, true, self, ctx, painter, edges, to_screen, draw_node_details);
+                crate::draw_node!(
+                    index,
+                    node,
+                    response,
+                    true,
+                    self,
+                    ctx,
+                    painter,
+                    edges,
+                    to_screen,
+                    draw_node_details
+                );
             } else {
                 nodes_to_draw_on_top.push((index, response));
             }
@@ -493,7 +605,15 @@ impl App {
             let is_dimmed = is_hovering_something && !is_connected_edge;
 
             if !is_dimmed {
-                crate::draw_edge!(edge, is_connected_edge, false, self, painter, nodes, to_screen);
+                crate::draw_edge!(
+                    edge,
+                    is_connected_edge,
+                    false,
+                    self,
+                    painter,
+                    nodes,
+                    to_screen
+                );
             }
         }
 
@@ -557,18 +677,25 @@ impl App {
                     for edge_idx in 0..edges.len() {
                         let mut child_idx_opt = None;
 
-                        if edges[edge_idx].source == current_idx && edges[edge_idx].visible {
+                        if edges[edge_idx].source == current_idx
+                            && edges[edge_idx].visible
+                        {
                             child_idx_opt = Some(edges[edge_idx].target);
-                        } else if edges[edge_idx].target == current_idx && edges[edge_idx].visible {
+                        } else if edges[edge_idx].target == current_idx
+                            && edges[edge_idx].visible
+                        {
                             child_idx_opt = Some(edges[edge_idx].source);
                         }
 
                         if let Some(child_idx) = child_idx_opt {
-                            let has_other_active_parents = edges.iter().any(|e| {
-                                (e.target == child_idx || e.source == child_idx)
-                                    && e.visible
-                                    && (e.source != current_idx && e.target != current_idx)
-                            });
+                            let has_other_active_parents =
+                                edges.iter().any(|e| {
+                                    (e.target == child_idx
+                                        || e.source == child_idx)
+                                        && e.visible
+                                        && (e.source != current_idx
+                                            && e.target != current_idx)
+                                });
 
                             if !has_other_active_parents {
                                 edges[edge_idx].visible = false;
@@ -609,11 +736,16 @@ impl App {
 
                 let total_new_children = hidden_children.len();
                 let mut angle: f32 = 0.0;
-                let angle_step = std::f32::consts::TAU / (total_new_children.max(1) as f32);
+                let angle_step =
+                    std::f32::consts::TAU / (total_new_children.max(1) as f32);
                 let spawn_radius = 240.0;
 
                 for (edge_idx, target_idx) in hidden_children {
-                    let target_pos = nodes[parent_idx].pos + egui::vec2(angle.cos() * spawn_radius, angle.sin() * spawn_radius);
+                    let target_pos = nodes[parent_idx].pos
+                        + egui::vec2(
+                            angle.cos() * spawn_radius,
+                            angle.sin() * spawn_radius,
+                        );
                     angle += angle_step;
 
                     nodes[target_idx].pos = target_pos;
@@ -645,7 +777,9 @@ impl App {
             }
 
             // fetch dataset or dataservice
-            if current_type.contains(crate::constants::TYPE_DATASERVICE) || current_type.contains(crate::constants::TYPE_DATASET) {
+            if current_type.contains(crate::constants::TYPE_DATASERVICE)
+                || current_type.contains(crate::constants::TYPE_DATASET)
+            {
                 crate::api_client::fetch_dataset_information(
                     ctx.clone(),
                     state.clone(),

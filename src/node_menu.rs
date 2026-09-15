@@ -1,5 +1,8 @@
 use crate::AppState;
-use crate::constants::{TYPE_AUTHOR, TYPE_CONCEPT, TYPE_DATASERVICE, TYPE_DATASET, TYPE_ORGANIZATION};
+use crate::constants::{
+    TYPE_AUTHOR, TYPE_CONCEPT, TYPE_DATASERVICE, TYPE_DATASET,
+    TYPE_ORGANIZATION,
+};
 use crate::graph_processor::{Edge, Node};
 use crate::theme::Theme;
 use eframe::egui;
@@ -29,11 +32,19 @@ pub fn draw_radial_menu(
     let btn_radius = 12.0 * zoom;
 
     let current_type = nodes[menu_idx].rdf_type.clone();
-    let fetchable_types = vec![TYPE_AUTHOR, TYPE_DATASERVICE, TYPE_DATASET, TYPE_CONCEPT, TYPE_ORGANIZATION];
+    let fetchable_types = vec![
+        TYPE_AUTHOR,
+        TYPE_DATASERVICE,
+        TYPE_DATASET,
+        TYPE_CONCEPT,
+        TYPE_ORGANIZATION,
+    ];
 
     // determine if we need to fetch data
-    let is_fetchable = fetchable_types.iter().any(|&t| current_type.contains(t));
-    let needs_fetch = is_fetchable && (!nodes[menu_idx].api_fetched || nodes[menu_idx].has_more_to_fetch);
+    let is_fetchable =
+        fetchable_types.iter().any(|&t| current_type.contains(t));
+    let needs_fetch = is_fetchable
+        && (!nodes[menu_idx].api_fetched || nodes[menu_idx].has_more_to_fetch);
 
     // determine if any connected edges or nodes are hidden
     let has_hidden_connections = edges.iter().any(|e| {
@@ -46,7 +57,8 @@ pub fn draw_radial_menu(
         }
     });
 
-    let show_plus = needs_fetch || has_hidden_connections || !nodes[menu_idx].expanded;
+    let show_plus =
+        needs_fetch || has_hidden_connections || !nodes[menu_idx].expanded;
 
     // Angles for the 4 buttons (Top, Top-Right, Right, Bottom-Right)
     let angles = [
@@ -63,15 +75,35 @@ pub fn draw_radial_menu(
     };
 
     // button 1 expand collapse logic
-    let btn1_pos = screen_pos + egui::vec2(angles[0].cos() * menu_radius, angles[0].sin() * menu_radius);
-    let btn1_rect = egui::Rect::from_center_size(btn1_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn1_resp = ui.interact(btn1_rect, ui.id().with(format!("btn_exp_{}", menu_idx)), egui::Sense::click())
+    let btn1_pos = screen_pos
+        + egui::vec2(
+            angles[0].cos() * menu_radius,
+            angles[0].sin() * menu_radius,
+        );
+    let btn1_rect = egui::Rect::from_center_size(
+        btn1_pos,
+        egui::vec2(btn_radius * 2.0, btn_radius * 2.0),
+    );
+    let btn1_resp = ui
+        .interact(
+            btn1_rect,
+            ui.id().with(format!("btn_exp_{}", menu_idx)),
+            egui::Sense::click(),
+        )
         .on_hover_text(btn1_tooltip);
 
     painter.circle_filled(btn1_pos, btn_radius, theme.menu_expand_bg);
     let icon1 = if show_plus { "+" } else { "-" };
-    let galley1 = painter.layout_no_wrap(icon1.into(), egui::FontId::proportional(16.0 * zoom), egui::Color32::WHITE);
-    painter.galley(btn1_pos - galley1.size() / 2.0, galley1, egui::Color32::WHITE);
+    let galley1 = painter.layout_no_wrap(
+        icon1.into(),
+        egui::FontId::proportional(16.0 * zoom),
+        egui::Color32::WHITE,
+    );
+    painter.galley(
+        btn1_pos - galley1.size() / 2.0,
+        galley1,
+        egui::Color32::WHITE,
+    );
 
     if btn1_resp.clicked() {
         if needs_fetch {
@@ -93,7 +125,9 @@ pub fn draw_radial_menu(
                 );
             }
 
-            if current_type.contains(TYPE_DATASERVICE) || current_type.contains(TYPE_DATASET) {
+            if current_type.contains(TYPE_DATASERVICE)
+                || current_type.contains(TYPE_DATASET)
+            {
                 crate::api_client::fetch_dataset_information(
                     ctx.clone(),
                     state.clone(),
@@ -137,28 +171,68 @@ pub fn draw_radial_menu(
     }
 
     // button 2 info box
-    let btn2_pos = screen_pos + egui::vec2(angles[1].cos() * menu_radius, angles[1].sin() * menu_radius);
-    let btn2_rect = egui::Rect::from_center_size(btn2_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn2_resp = ui.interact(btn2_rect, ui.id().with(format!("btn_info_{}", menu_idx)), egui::Sense::click())
+    let btn2_pos = screen_pos
+        + egui::vec2(
+            angles[1].cos() * menu_radius,
+            angles[1].sin() * menu_radius,
+        );
+    let btn2_rect = egui::Rect::from_center_size(
+        btn2_pos,
+        egui::vec2(btn_radius * 2.0, btn_radius * 2.0),
+    );
+    let btn2_resp = ui
+        .interact(
+            btn2_rect,
+            ui.id().with(format!("btn_info_{}", menu_idx)),
+            egui::Sense::click(),
+        )
         .on_hover_text("Open node infobox");
 
     painter.circle_filled(btn2_pos, btn_radius, theme.menu_info_bg);
-    let galley2 = painter.layout_no_wrap("i".into(), egui::FontId::proportional(14.0 * zoom), egui::Color32::WHITE);
-    painter.galley(btn2_pos - galley2.size() / 2.0, galley2, egui::Color32::WHITE);
+    let galley2 = painter.layout_no_wrap(
+        "i".into(),
+        egui::FontId::proportional(14.0 * zoom),
+        egui::Color32::WHITE,
+    );
+    painter.galley(
+        btn2_pos - galley2.size() / 2.0,
+        galley2,
+        egui::Color32::WHITE,
+    );
 
     if btn2_resp.clicked() {
         *show_menu = false;
     }
 
     // button 3 copy node id
-    let btn3_pos = screen_pos + egui::vec2(angles[2].cos() * menu_radius, angles[2].sin() * menu_radius);
-    let btn3_rect = egui::Rect::from_center_size(btn3_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn3_resp = ui.interact(btn3_rect, ui.id().with(format!("btn_copy_{}", menu_idx)), egui::Sense::click())
+    let btn3_pos = screen_pos
+        + egui::vec2(
+            angles[2].cos() * menu_radius,
+            angles[2].sin() * menu_radius,
+        );
+    let btn3_rect = egui::Rect::from_center_size(
+        btn3_pos,
+        egui::vec2(btn_radius * 2.0, btn_radius * 2.0),
+    );
+    let btn3_resp = ui
+        .interact(
+            btn3_rect,
+            ui.id().with(format!("btn_copy_{}", menu_idx)),
+            egui::Sense::click(),
+        )
         .on_hover_text("Copy nodeid to clipboard");
 
     painter.circle_filled(btn3_pos, btn_radius, theme.menu_api_bg);
-    let galley3 = painter.layout_no_wrap("C".into(), egui::FontId::proportional(14.0 * zoom), egui::Color32::WHITE);
-    painter.galley(btn3_pos - galley3.size() / 2.0, galley3, egui::Color32::WHITE);
+    let galley3 = painter.layout_no_wrap(
+        "C".into(),
+        egui::FontId::proportional(14.0 * zoom),
+        egui::Color32::WHITE,
+    );
+    painter.galley(
+        btn3_pos - galley3.size() / 2.0,
+        galley3,
+        egui::Color32::WHITE,
+    );
 
     if btn3_resp.clicked() {
         // Send Node ID to the system clipboard
@@ -168,15 +242,35 @@ pub fn draw_radial_menu(
     }
 
     // button 4 hide node
-    let btn4_pos = screen_pos + egui::vec2(angles[3].cos() * menu_radius, angles[3].sin() * menu_radius);
-    let btn4_rect = egui::Rect::from_center_size(btn4_pos, egui::vec2(btn_radius * 2.0, btn_radius * 2.0));
-    let btn4_resp = ui.interact(btn4_rect, ui.id().with(format!("btn_hide_{}", menu_idx)), egui::Sense::click())
+    let btn4_pos = screen_pos
+        + egui::vec2(
+            angles[3].cos() * menu_radius,
+            angles[3].sin() * menu_radius,
+        );
+    let btn4_rect = egui::Rect::from_center_size(
+        btn4_pos,
+        egui::vec2(btn_radius * 2.0, btn_radius * 2.0),
+    );
+    let btn4_resp = ui
+        .interact(
+            btn4_rect,
+            ui.id().with(format!("btn_hide_{}", menu_idx)),
+            egui::Sense::click(),
+        )
         .on_hover_text("Hide the node");
 
     // Standard red tone for hide/delete context
     painter.circle_filled(btn4_pos, btn_radius, theme.menu_hide_bg);
-    let galley4 = painter.layout_no_wrap("x".into(), egui::FontId::proportional(14.0 * zoom), egui::Color32::WHITE);
-    painter.galley(btn4_pos - galley4.size() / 2.0, galley4, egui::Color32::WHITE);
+    let galley4 = painter.layout_no_wrap(
+        "x".into(),
+        egui::FontId::proportional(14.0 * zoom),
+        egui::Color32::WHITE,
+    );
+    painter.galley(
+        btn4_pos - galley4.size() / 2.0,
+        galley4,
+        egui::Color32::WHITE,
+    );
 
     if btn4_resp.clicked() {
         // 1. Hide the node itself

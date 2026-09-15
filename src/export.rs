@@ -84,19 +84,28 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     svg.push_str(
         "    <marker id=\"arrow-end\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n",
     );
-    svg.push_str(&format!("      <path d=\"M 0 10 L 10 5 L 0 5 z\" fill=\"{}\" />\n", edge_color));
+    svg.push_str(&format!(
+        "      <path d=\"M 0 10 L 10 5 L 0 5 z\" fill=\"{}\" />\n",
+        edge_color
+    ));
     svg.push_str("    </marker>\n");
 
     // Left-pointing half arrow
     svg.push_str(
         "    <marker id=\"arrow-start\" viewBox=\"0 0 10 10\" refX=\"2\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n",
     );
-    svg.push_str(&format!("      <path d=\"M 10 0 L 0 5 L 10 5 z\" fill=\"{}\" />\n", edge_color));
+    svg.push_str(&format!(
+        "      <path d=\"M 10 0 L 0 5 L 10 5 z\" fill=\"{}\" />\n",
+        edge_color
+    ));
     svg.push_str("    </marker>\n");
     svg.push_str("  </defs>\n");
 
     // Explicitly draw a solid background rectangle
-    svg.push_str(&format!("  <rect width=\"100%\" height=\"100%\" fill=\"{}\" />\n", bg_color));
+    svg.push_str(&format!(
+        "  <rect width=\"100%\" height=\"100%\" fill=\"{}\" />\n",
+        bg_color
+    ));
 
     // ==========================================
     // --- GRAPH AREA (Left Side) ---
@@ -131,8 +140,16 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
 
         // Pull the line back by 16px (14px node radius + 2px gap)
         let offset = 16.0;
-        let start_x = if edge.bidirectional { x1 + ux * offset } else { x1 };
-        let start_y = if edge.bidirectional { y1 + uy * offset } else { y1 };
+        let start_x = if edge.bidirectional {
+            x1 + ux * offset
+        } else {
+            x1
+        };
+        let start_y = if edge.bidirectional {
+            y1 + uy * offset
+        } else {
+            y1
+        };
         let end_x = x2 - ux * offset;
         let end_y = y2 - uy * offset;
 
@@ -172,7 +189,9 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         };
 
         // Helper closure to stack multiple labels vertically using <tspan>
-        let draw_label = |label_str: &str, base_y: f32, svg_out: &mut String| {
+        let draw_label = |label_str: &str,
+                          base_y: f32,
+                          svg_out: &mut String| {
             let labels: Vec<&str> = label_str.split(", ").collect();
             let is_top = base_y < 0.0;
             let line_height = 10.0;
@@ -190,9 +209,15 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
 
             for (i, lbl) in labels.iter().enumerate() {
                 if i == 0 {
-                    svg_out.push_str(&format!("      <tspan x=\"0\" y=\"{:.1}\">{}</tspan>\n", start_y, lbl));
+                    svg_out.push_str(&format!(
+                        "      <tspan x=\"0\" y=\"{:.1}\">{}</tspan>\n",
+                        start_y, lbl
+                    ));
                 } else {
-                    svg_out.push_str(&format!("      <tspan x=\"0\" dy=\"{:.1}\">{}</tspan>\n", line_height, lbl));
+                    svg_out.push_str(&format!(
+                        "      <tspan x=\"0\" dy=\"{:.1}\">{}</tspan>\n",
+                        line_height, lbl
+                    ));
                 }
             }
             svg_out.push_str("    </text>\n");
@@ -241,7 +266,10 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     // ==========================================
     // --- EXTERNAL INFO PANEL (Right Side) ---
     // ==========================================
-    svg.push_str(&format!("  <g id=\"info_panel\" transform=\"translate({}, 0)\">\n", graph_width));
+    svg.push_str(&format!(
+        "  <g id=\"info_panel\" transform=\"translate({}, 0)\">\n",
+        graph_width
+    ));
 
     // Panel Background (Slightly darker/lighter than master_bg to separate it)
     let panel_bg = color_to_hex(theme.button_bg);
@@ -259,7 +287,13 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     // Render Legend entries from the theme dynamically
     let mut current_y = 190.0;
     for (rdf_type, colors) in &theme.node_map {
-        let clean_name = rdf_type.split('/').last().unwrap_or(rdf_type).split('#').last().unwrap_or(rdf_type);
+        let clean_name = rdf_type
+            .split('/')
+            .last()
+            .unwrap_or(rdf_type)
+            .split('#')
+            .last()
+            .unwrap_or(rdf_type);
 
         svg.push_str(&format!(
             "    <circle cx=\"30\" cy=\"{:.1}\" r=\"8\" fill=\"{}\" />\n",
@@ -320,7 +354,8 @@ pub fn generate_json(nodes: &[Node], edges: &[Edge]) -> String {
         }).collect::<Vec<_>>()
     });
 
-    serde_json::to_string_pretty(&export_obj).unwrap_or_else(|_| "{}".to_string())
+    serde_json::to_string_pretty(&export_obj)
+        .unwrap_or_else(|_| "{}".to_string())
 }
 
 // ---------------------------------------------------------
@@ -336,12 +371,17 @@ pub fn save_file(filename: &str, content: &str, mime_type: &str) {
             array.push(&wasm_bindgen::JsValue::from_str(content));
             let options = web_sys::BlobPropertyBag::new();
             options.set_type(mime_type);
-            if let Ok(blob) = web_sys::Blob::new_with_str_sequence_and_options(&array, &options) {
-                if let Ok(url) = web_sys::Url::create_object_url_with_blob(&blob) {
+            if let Ok(blob) = web_sys::Blob::new_with_str_sequence_and_options(
+                &array, &options,
+            ) {
+                if let Ok(url) =
+                    web_sys::Url::create_object_url_with_blob(&blob)
+                {
                     if let Ok(a) = document.create_element("a") {
                         let _ = a.set_attribute("href", &url);
                         let _ = a.set_attribute("download", filename);
-                        if let Ok(html_a) = a.dyn_into::<web_sys::HtmlElement>() {
+                        if let Ok(html_a) = a.dyn_into::<web_sys::HtmlElement>()
+                        {
                             html_a.click();
                         }
                     }
@@ -355,7 +395,8 @@ pub fn save_file(filename: &str, content: &str, mime_type: &str) {
 #[cfg(not(target_arch = "wasm32"))]
 pub fn save_file(filename: &str, content: &str, _mime_type: &str) {
     // 1. Explicitly grab the Current Working Directory
-    let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let cwd = std::env::current_dir()
+        .unwrap_or_else(|_| std::path::PathBuf::from("."));
 
     // 2. Append the filename to the CWD
     let full_path = cwd.join(filename);
@@ -403,7 +444,11 @@ pub fn save_png_from_svg_web(svg_data: &str, filename: &str) {
     "#;
 
     let func = js_sys::Function::new_with_args("svgString, filename", js_code);
-    let _ = func.call2(&JsValue::NULL, &JsValue::from_str(svg_data), &JsValue::from_str(filename));
+    let _ = func.call2(
+        &JsValue::NULL,
+        &JsValue::from_str(svg_data),
+        &JsValue::from_str(filename),
+    );
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -427,7 +472,9 @@ pub fn save_png_from_svg(svg_data: &str, filename: &str) {
     if let Some(family_name) = fallback_family {
         font_db.set_sans_serif_family(family_name.as_str());
     } else {
-        log::warn!("No system fonts were found! Text will not render. Please install a font package.");
+        log::warn!(
+            "No system fonts were found! Text will not render. Please install a font package."
+        );
     }
 
     let mut opt = Options::default();
@@ -442,16 +489,24 @@ pub fn save_png_from_svg(svg_data: &str, filename: &str) {
             let size = tree.size().to_int_size();
             if let Some(mut pixmap) = Pixmap::new(size.width(), size.height()) {
                 // 4. Render the SVG mathematically into the pixel buffer
-                resvg::render(&tree, Transform::default(), &mut pixmap.as_mut());
+                resvg::render(
+                    &tree,
+                    Transform::default(),
+                    &mut pixmap.as_mut(),
+                );
 
                 // 5. Save to Current Working Directory
-                let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+                let cwd = std::env::current_dir()
+                    .unwrap_or_else(|_| std::path::PathBuf::from("."));
                 let full_path = cwd.join(filename);
 
                 if let Err(e) = pixmap.save_png(&full_path) {
                     log::error!("Failed to save PNG from SVG: {}", e);
                 } else {
-                    log::info!("Successfully rendered and exported PNG to: {:?}", full_path);
+                    log::info!(
+                        "Successfully rendered and exported PNG to: {:?}",
+                        full_path
+                    );
                 }
             } else {
                 log::error!("Failed to allocate pixel buffer for PNG.");

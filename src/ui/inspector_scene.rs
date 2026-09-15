@@ -6,7 +6,12 @@ use eframe::egui;
 use log::{debug, error, info, trace, warn};
 
 impl App {
-    pub fn render_inspector_scene(&mut self, ui: &mut egui::Ui, nodes: &mut [Node], edges: &mut [Edge]) {
+    pub fn render_inspector_scene(
+        &mut self,
+        ui: &mut egui::Ui,
+        nodes: &mut [Node],
+        edges: &mut [Edge],
+    ) {
         // render node inspector
         let max_width = ui.available_width() - 12.0; // magic number for margin
         let max_height = ui.available_height() - 34.0; // magic number for margin

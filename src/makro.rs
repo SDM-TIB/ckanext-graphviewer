@@ -47,15 +47,20 @@ macro_rules! draw_edge {
             let adjusted_p2 = p2 - (dir * p2_visual_end);
 
             if length > (p1_visual_start + p2_visual_end) {
-                $painter.line_segment([adjusted_p1, adjusted_p2], egui::Stroke::new(stroke_width, edge_color));
+                $painter.line_segment(
+                    [adjusted_p1, adjusted_p2],
+                    egui::Stroke::new(stroke_width, edge_color),
+                );
             }
 
             // draw arrowhead
             let tip = p2 - (dir * effective_node_radius);
             let angle_left = line_angle - arrow_angle;
-            let p_left = tip - egui::vec2(angle_left.cos(), angle_left.sin()) * arrow_len;
+            let p_left = tip
+                - egui::vec2(angle_left.cos(), angle_left.sin()) * arrow_len;
             let angle_right = line_angle + arrow_angle;
-            let p_right = tip - egui::vec2(angle_right.cos(), angle_right.sin()) * arrow_len;
+            let p_right = tip
+                - egui::vec2(angle_right.cos(), angle_right.sin()) * arrow_len;
 
             $painter.add(egui::Shape::convex_polygon(
                 vec![tip, p_left, p_right],
@@ -70,9 +75,13 @@ macro_rules! draw_edge {
                 let line_angle_rev = dir_rev.y.atan2(dir_rev.x);
 
                 let angle_left_rev = line_angle_rev - arrow_angle;
-                let p_left_rev = tip_rev - egui::vec2(angle_left_rev.cos(), angle_left_rev.sin()) * arrow_len;
+                let p_left_rev = tip_rev
+                    - egui::vec2(angle_left_rev.cos(), angle_left_rev.sin())
+                        * arrow_len;
                 let angle_right_rev = line_angle_rev + arrow_angle;
-                let p_right_rev = tip_rev - egui::vec2(angle_right_rev.cos(), angle_right_rev.sin()) * arrow_len;
+                let p_right_rev = tip_rev
+                    - egui::vec2(angle_right_rev.cos(), angle_right_rev.sin())
+                        * arrow_len;
 
                 $painter.add(egui::Shape::convex_polygon(
                     vec![tip_rev, p_left_rev, p_right_rev],
@@ -108,19 +117,34 @@ macro_rules! draw_edge {
 
                 let text_color = if $is_dimmed {
                     let c = $app.ui.theme.text_fg;
-                    egui::Color32::from_rgba_unmultiplied(c.r(), c.g(), c.b(), 100)
+                    egui::Color32::from_rgba_unmultiplied(
+                        c.r(),
+                        c.g(),
+                        c.b(),
+                        100,
+                    )
                 } else {
                     $app.ui.theme.text_fg
                 };
 
-                let galley = $painter.layout_no_wrap(display_text, egui::FontId::proportional(font_size), text_color);
+                let galley = $painter.layout_no_wrap(
+                    display_text,
+                    egui::FontId::proportional(font_size),
+                    text_color,
+                );
                 let size = galley.size();
                 let padding = 3.0 * $app.ui.zoom;
 
-                let snapped_center = egui::pos2(center_point.x.round(), center_point.y.round());
-                let text_rect = egui::Rect::from_center_size(snapped_center, size);
+                let snapped_center =
+                    egui::pos2(center_point.x.round(), center_point.y.round());
+                let text_rect =
+                    egui::Rect::from_center_size(snapped_center, size);
 
-                $painter.rect_filled(text_rect.expand(padding), 2.0 * $app.ui.zoom, $app.ui.theme.painter_bg);
+                $painter.rect_filled(
+                    text_rect.expand(padding),
+                    2.0 * $app.ui.zoom,
+                    $app.ui.theme.painter_bg,
+                );
                 $painter.galley(text_rect.min, galley, text_color);
             }
         }
@@ -133,7 +157,8 @@ macro_rules! draw_node {
         let screen_pos = $to_screen($node.pos);
         let radius = 15.0 * $app.ui.zoom;
 
-        let is_pinned = $app.ui.selected_node == Some($index) && !$app.ui.show_menu;
+        let is_pinned =
+            $app.ui.selected_node == Some($index) && !$app.ui.show_menu;
 
         if is_pinned {
             let offset = egui::vec2(20.0 * $app.ui.zoom, 20.0 * $app.ui.zoom);
@@ -166,7 +191,12 @@ macro_rules! draw_node {
         };
 
         let final_color = if $is_dimmed {
-            egui::Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 100)
+            egui::Color32::from_rgba_unmultiplied(
+                color.r(),
+                color.g(),
+                color.b(),
+                100,
+            )
         } else {
             color
         };
@@ -185,7 +215,9 @@ macro_rules! draw_node {
                     let mut c = pred_name.chars();
                     match c.next() {
                         None => String::new(),
-                        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+                        Some(f) => {
+                            f.to_uppercase().collect::<String>() + c.as_str()
+                        }
                     }
                 };
 
@@ -201,12 +233,22 @@ macro_rules! draw_node {
                 $app.ui.theme.text_fg
             };
 
-            let galley = $painter.layout_no_wrap(display_text.to_string(), egui::FontId::proportional(font_size), text_color);
+            let galley = $painter.layout_no_wrap(
+                display_text.to_string(),
+                egui::FontId::proportional(font_size),
+                text_color,
+            );
 
             let text_pos = screen_pos + egui::vec2(0.0, 20.0 * $app.ui.zoom);
-            let text_rect = egui::Align2::CENTER_TOP.anchor_rect(egui::Rect::from_min_size(text_pos, galley.size()));
+            let text_rect = egui::Align2::CENTER_TOP.anchor_rect(
+                egui::Rect::from_min_size(text_pos, galley.size()),
+            );
 
-            $painter.rect_filled(text_rect.expand(2.0 * $app.ui.zoom), 2.0 * $app.ui.zoom, $app.ui.theme.painter_bg);
+            $painter.rect_filled(
+                text_rect.expand(2.0 * $app.ui.zoom),
+                2.0 * $app.ui.zoom,
+                $app.ui.theme.painter_bg,
+            );
             $painter.galley(text_rect.min, galley, text_color);
         }
     };
