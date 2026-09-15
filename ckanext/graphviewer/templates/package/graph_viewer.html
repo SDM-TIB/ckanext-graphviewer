@@ -18,11 +18,13 @@
 <div style="width: 100vw; margin-left: calc(50% - 50vw); display: flex; justify-content: center;">
     <div id="canvas_container"
          style="width: 90vw;
-                max-width: none !important;
-                height: 75vh;
-                border: 1px solid #ddd;
-                overflow: hidden;
-                position: relative;">
+             max-width: none !important;
+             min-width: 800px;
+             height: 75vh;
+             min-height: 600px;
+             border: 1px solid #ddd;
+             overflow: hidden;
+             position: relative;">
         <canvas
             id="the_canvas_id"
             style="width: 100%;
@@ -38,13 +40,13 @@
 
         <div id="custom_resize_handle"
              style="position: absolute;
-                    bottom: 0;
-                    right: 0;
-                    width: 25px;
-                    height: 25px;
-                    cursor: nwse-resize;
-                    z-index: 10;
-                    background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.4) 50%);">
+                 bottom: 0;
+                 right: 0;
+                 width: 25px;
+                 height: 25px;
+                 cursor: nwse-resize;
+                 z-index: 10;
+                 background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.4) 50%);">
         </div>
     </div>
 
