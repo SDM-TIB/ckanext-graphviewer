@@ -268,7 +268,7 @@ impl App {
                         vec![("The ", false), ("Colour Mode ", true), ("button gives you the ability to switch between light and dark colour themes.", false)],
                         vec![("The ", false), ("Reset View ", true), ("button loads the initial view of the graph that was created after confirming a search.", false)],
                         vec![("On the left is the ", false), ("Legend ", true), ("and further information on Graph ", false), ("Controls.", true)],
-                        vec![("The HTML Container can be resized by dragging the white triangle on the bottom left.", false)],
+                        vec![("The HTML Container can be resized by dragging the white triangle on the bottom right.", false)],
                     ];
 
                     for feature_segments in features {
