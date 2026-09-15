@@ -268,6 +268,7 @@ impl App {
                         vec![("The ", false), ("Colour Mode ", true), ("button gives you the ability to switch between light and dark colour themes.", false)],
                         vec![("The ", false), ("Reset View ", true), ("button loads the initial view of the graph that was created after confirming a search.", false)],
                         vec![("On the left is the ", false), ("Legend ", true), ("and further information on Graph ", false), ("Controls.", true)],
+                        vec![("The HTML Container can be resized by dragging the white triangle on the bottom left.", false)],
                     ];
 
                     for feature_segments in features {
@@ -563,7 +564,7 @@ impl App {
                         }
 
                         if let Some(child_idx) = child_idx_opt {
-                             let has_other_active_parents = edges.iter().any(|e| {
+                            let has_other_active_parents = edges.iter().any(|e| {
                                 (e.target == child_idx || e.source == child_idx)
                                     && e.visible
                                     && (e.source != current_idx && e.target != current_idx)
@@ -573,7 +574,7 @@ impl App {
                                 edges[edge_idx].visible = false;
                                 nodes[child_idx].visible = false;
 
-                                 if nodes[child_idx].expanded {
+                                if nodes[child_idx].expanded {
                                     stack.push(child_idx);
                                 }
                             }
