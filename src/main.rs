@@ -189,6 +189,7 @@ pub struct UIState {
     pub pending_click_node: Option<usize>,
     pub pending_click_time: f64,
     pub dragged_node: Option<usize>,
+    pub show_info_window: bool,
 
     // Inspector Panel
     pub inspector_selected_node: Option<String>,
@@ -474,6 +475,7 @@ impl App {
                 pending_click_node: None,
                 pending_click_time: 0.0,
                 dragged_node: None,
+                show_info_window: true,
                 inspector_selected_node: None,
                 inspector_search_text: String::new(),
             },

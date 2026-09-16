@@ -25,6 +25,12 @@ impl App {
             ui.with_layout(
                 egui::Layout::right_to_left(egui::Align::Center),
                 |ui| {
+                    let clear_view_button = egui::Button::new(
+                        egui::RichText::new("Clear View")
+                            .color(self.ui.theme.text_fg),
+                    )
+                    .fill(self.ui.theme.button_bg);
+
                     let reset_view_button = egui::Button::new(
                         egui::RichText::new("Reset View")
                             .color(self.ui.theme.text_fg),
@@ -70,6 +76,25 @@ impl App {
                         }
 
                         *init_snapshot = GraphSnapshot::new(nodes, edges);
+                    }
+
+                    if ui
+                        .add(clear_view_button)
+                        .on_hover_text("Clear the content of the graph view")
+                        .clicked()
+                    {
+                        self.ui.zoom = 1.0;
+                        self.ui.pan = egui::vec2(0.0, 0.0);
+
+                        for node in nodes.iter_mut() {
+                            node.visible = false;
+                            node.expanded = false;
+                        }
+                        for edge in edges.iter_mut() {
+                            edge.visible = false;
+                        }
+                        self.ui.selected_node = None;
+                        self.ui.show_info_window = true;
                     }
                 },
             );
@@ -302,7 +327,8 @@ impl App {
 
         // intro window
         let has_visible_nodes = nodes.iter().any(|n| n.visible);
-        if !has_visible_nodes {
+
+        if !has_visible_nodes && self.ui.show_info_window {
             let window_frame = egui::Frame::window(&ui.ctx().global_style())
                 .fill(self.ui.theme.button_bg)
                 .inner_margin(15.0)
@@ -317,6 +343,18 @@ impl App {
                 .frame(window_frame)
                 .show(ui.ctx(), |ui| {
                     ui.set_max_width(700.0);
+
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+                        let close_btn = egui::Button::new(
+                            egui::RichText::new("X").color(self.ui.theme.text_fg).strong()
+                        ).fill(self.ui.theme.button_bg);
+
+                        if ui.add(close_btn).on_hover_text("Close the welcome window").clicked() {
+                            self.ui.show_info_window = false;
+                        }
+                    });
+
+                    ui.add_space(-20.0);
 
                     ui.vertical_centered(|ui| {
                         ui.heading(egui::RichText::new("Welcome to the LDM KG traversal Tool")

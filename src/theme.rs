@@ -17,6 +17,7 @@ pub struct Theme {
     // Backgrounds and Button Colors
     pub master_bg: Color32,
     pub painter_bg: Color32,
+    pub label_bg: Color32,
     pub button_bg: Color32,
     pub button_active_bg: Color32,
 
@@ -113,6 +114,7 @@ impl Theme {
             debug: Color32::RED,
             master_bg: Color32::from_rgb(30, 30, 35),
             painter_bg: Color32::from_rgb(50, 50, 55),
+            label_bg: Color32::from_rgb(60, 60, 65),
             button_bg: Color32::from_rgb(70, 70, 75),
             button_active_bg: Color32::from_rgb(100, 100, 105),
             menu_expand_bg: Color32::from_rgb(70, 130, 200),
@@ -138,6 +140,7 @@ impl Theme {
             master_bg: Color32::from_rgb(240, 240, 245),
             painter_bg: Color32::from_rgb(255, 255, 255),
             button_bg: Color32::from_rgb(220, 220, 225),
+            label_bg: Color32::from_rgb(210, 210, 215),
             button_active_bg: Color32::from_rgb(255, 255, 255),
             menu_expand_bg: Color32::from_rgb(70, 130, 200),
             menu_info_bg: Color32::from_rgb(100, 180, 100),
@@ -161,6 +164,7 @@ impl Theme {
             debug: Color32::YELLOW,
             master_bg: Color32::from_rgb(40, 0, 0),
             painter_bg: Color32::from_rgb(20, 0, 0),
+            label_bg: Color32::from_rgb(20, 0, 0),
             button_bg: Color32::from_rgb(120, 0, 0),
             button_active_bg: Color32::from_rgb(200, 0, 0),
             menu_expand_bg: Color32::from_rgb(160, 0, 0),

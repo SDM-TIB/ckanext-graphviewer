@@ -143,7 +143,7 @@ macro_rules! draw_edge {
                 $painter.rect_filled(
                     text_rect.expand(padding),
                     2.0 * $app.ui.zoom,
-                    $app.ui.theme.painter_bg,
+                    $app.ui.theme.label_bg,
                 );
                 $painter.galley(text_rect.min, galley, text_color);
             }
@@ -233,7 +233,7 @@ macro_rules! draw_node {
             $painter.rect_filled(
                 text_rect.expand(2.0 * $app.ui.zoom),
                 2.0 * $app.ui.zoom,
-                $app.ui.theme.painter_bg,
+                $app.ui.theme.label_bg,
             );
             $painter.galley(text_rect.min, galley, text_color);
         }
