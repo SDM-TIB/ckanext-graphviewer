@@ -547,6 +547,17 @@ impl eframe::App for App {
     fn ui(&mut self, app_ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = app_ui.ctx().clone();
 
+        let current_zoom = ctx.zoom_factor();
+        let logical_size = ctx.content_rect().size();
+
+        let unscaled_size = logical_size * current_zoom;
+
+        let scale_factor = (unscaled_size.x / 800.0)
+            .min(unscaled_size.y / 800.0)
+            .max(1.0);
+
+        ctx.set_zoom_factor(scale_factor);
+
         ctx.set_visuals(self.ui.theme.to_egui_visuals());
 
         let main_app_frame = egui::Frame::central_panel(&ctx.global_style())
