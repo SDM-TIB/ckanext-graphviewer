@@ -661,6 +661,41 @@ impl App {
         // update the internal coordinate mapping for nodes that were dragged this frame.
         if let Some((parent_idx, delta)) = dragged_node_delta {
             nodes[parent_idx].pos += delta;
+
+            // find all leaf nodes that are exclusively connected to the dragged node
+            let mut children_to_move = Vec::new();
+
+            for edge in edges.iter() {
+                if !edge.visible {
+                    continue;
+                }
+
+                let mut child_idx_opt = None;
+                if edge.source == parent_idx {
+                    child_idx_opt = Some(edge.target);
+                } else if edge.target == parent_idx {
+                    child_idx_opt = Some(edge.source);
+                }
+
+                if let Some(child_idx) = child_idx_opt {
+                    // Check if this child has any other visible active connections
+                    let has_other_active_parents = edges.iter().any(|e| {
+                        (e.target == child_idx || e.source == child_idx)
+                            && e.visible
+                            && (e.source != parent_idx
+                                && e.target != parent_idx)
+                    });
+
+                    if !has_other_active_parents {
+                        children_to_move.push(child_idx);
+                    }
+                }
+            }
+
+            // apply the exact same movement delta to the exclusive children
+            for child_idx in children_to_move {
+                nodes[child_idx].pos += delta;
+            }
         }
 
         // node expansion and cascade collapse logic

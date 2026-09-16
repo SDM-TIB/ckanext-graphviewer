@@ -41,7 +41,7 @@ impl App {
 
         // main element
         ui.horizontal(|ui| {
-            // the element has a hight of 19 pixel from the top the seperator HACK for consistency
+            // the element has a hight of 19 pixel from the top the seperator HACK: for consistency
             ui.spacing_mut().interact_size.y = 19.0;
 
             ui.label("Select a start point:");
