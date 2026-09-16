@@ -40,7 +40,7 @@ pub fn draw_radial_menu(
         TYPE_ORGANIZATION,
     ];
 
-    // determine if we need to fetch data
+    // determine if data needs to be fetched
     let is_fetchable =
         fetchable_types.iter().any(|&t| current_type.contains(t));
     let needs_fetch = is_fetchable
@@ -60,7 +60,7 @@ pub fn draw_radial_menu(
     let show_plus =
         needs_fetch || has_hidden_connections || !nodes[menu_idx].expanded;
 
-    // Angles for the 4 buttons (Top, Top-Right, Right, Bottom-Right)
+    // angles for the 4 buttons (top, top-right, right, bottom-right)
     let angles = [
         std::f32::consts::PI / -2.0, // Top (-90 deg)
         std::f32::consts::PI / -4.0, // Top-Right (-45 deg)
@@ -74,7 +74,7 @@ pub fn draw_radial_menu(
         "Collapse the node"
     };
 
-    // button 1 expand collapse logic
+    // top button expand collapse logic
     let btn1_pos = screen_pos
         + egui::vec2(
             angles[0].cos() * menu_radius,
@@ -107,7 +107,7 @@ pub fn draw_radial_menu(
 
     if btn1_resp.clicked() {
         if needs_fetch {
-            // Execute API Fetch
+            // execute API fetch
             *show_menu = false;
             *selected_node = None;
             let clicked_node_id = nodes[menu_idx].id.clone();
@@ -163,14 +163,14 @@ pub fn draw_radial_menu(
                 );
             }
         } else {
-            // Execute Standard Expand/Collapse locally without API calls
+            // execute expand/ collapse logic without API call
             nodes[menu_idx].expanded = !show_plus;
             *clicked_to_expand = Some(menu_idx);
             *selected_node = None;
         }
     }
 
-    // button 2 info box
+    // top-right button info box
     let btn2_pos = screen_pos
         + egui::vec2(
             angles[1].cos() * menu_radius,
@@ -204,7 +204,7 @@ pub fn draw_radial_menu(
         *show_menu = false;
     }
 
-    // button 3 copy node id
+    // right button copy node id
     let btn3_pos = screen_pos
         + egui::vec2(
             angles[2].cos() * menu_radius,
@@ -235,13 +235,12 @@ pub fn draw_radial_menu(
     );
 
     if btn3_resp.clicked() {
-        // Send Node ID to the system clipboard
         ctx.copy_text(nodes[menu_idx].id.clone());
         *show_menu = false;
         *selected_node = None;
     }
 
-    // button 4 hide node
+    // bottom right button hide node
     let btn4_pos = screen_pos
         + egui::vec2(
             angles[3].cos() * menu_radius,
@@ -259,7 +258,6 @@ pub fn draw_radial_menu(
         )
         .on_hover_text("Hide the node");
 
-    // Standard red tone for hide/delete context
     painter.circle_filled(btn4_pos, btn_radius, theme.menu_hide_bg);
     let galley4 = painter.layout_no_wrap(
         "x".into(),
@@ -273,10 +271,10 @@ pub fn draw_radial_menu(
     );
 
     if btn4_resp.clicked() {
-        // 1. Hide the node itself
+        // hide node
         nodes[menu_idx].visible = false;
 
-        // 2. Hide all edges connecting to it
+        // hide edges connected to node
         for edge in edges.iter_mut() {
             if edge.source == menu_idx || edge.target == menu_idx {
                 edge.visible = false;

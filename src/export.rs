@@ -5,12 +5,12 @@ use eframe::egui::Color32;
 #[allow(unused_imports)]
 use log::{debug, error, info, trace, warn};
 
-// Helper to convert egui::Color32 to a web-friendly hex string
+// helper to convert egui::Color32 to hex string
 fn color_to_hex(color: Color32) -> String {
     format!("#{:02X}{:02X}{:02X}", color.r(), color.g(), color.b())
 }
 
-// Helper to safely truncate strings with an ellipsis if they are too long
+// helper to safely truncate strings with an ellipsis if they are too long
 fn truncate_text(text: &str, max_chars: usize) -> String {
     if text.chars().count() > max_chars {
         let truncated: String = text.chars().take(max_chars).collect();
@@ -20,9 +20,9 @@ fn truncate_text(text: &str, max_chars: usize) -> String {
     }
 }
 
-/// Generates an SVG string containing the graph and an external information panel
+// Generates an SVG string containing the graph and an external information panel
 pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
-    // 1. Calculate the bounding box of the visible graph
+    // calculate the bounding box of the visible graph
     let mut min_x = f32::MAX;
     let mut max_x = f32::MIN;
     let mut min_y = f32::MAX;
@@ -48,7 +48,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         }
     }
 
-    // Fallback if the graph is completely empty
+    // fallback if the graph is empty
     if visible_node_count == 0 {
         min_x = 0.0;
         max_x = 800.0;
@@ -56,8 +56,8 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         max_y = 600.0;
     }
 
-    // 2. Define Canvas Dimensions
-    // We increase horizontal padding significantly to protect long text labels from bleeding off the edges
+    // define canvas dimensions
+    // padding for node labels
     let padding_x = 180.0;
     let padding_y = 80.0;
 
@@ -66,7 +66,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
 
     let panel_width = 300.0;
     let total_width = graph_width + panel_width;
-    let total_height = graph_height.max(600.0); // Ensure it's at least 600px tall for the sidebar
+    let total_height = graph_height.max(600.0);
 
     let bg_color = color_to_hex(theme.master_bg);
     let text_color = color_to_hex(theme.text_fg);
@@ -78,9 +78,9 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         total_width, total_height, total_width, total_height
     ));
 
-    // --- Define Half-Arrow Markers ---
+    // arrowhead
     svg.push_str("  <defs>\n");
-    // Right-pointing half arrow (Inverted to M 0 10 so it always pairs correctly)
+    // right pointing half arrow
     svg.push_str(
         "    <marker id=\"arrow-end\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n",
     );
@@ -90,7 +90,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     ));
     svg.push_str("    </marker>\n");
 
-    // Left-pointing half arrow
+    // left pointing half arrow
     svg.push_str(
         "    <marker id=\"arrow-start\" viewBox=\"0 0 10 10\" refX=\"2\" refY=\"5\" markerWidth=\"8\" markerHeight=\"8\" orient=\"auto\">\n",
     );
@@ -101,18 +101,16 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     svg.push_str("    </marker>\n");
     svg.push_str("  </defs>\n");
 
-    // Explicitly draw a solid background rectangle
+    // background
     svg.push_str(&format!(
         "  <rect width=\"100%\" height=\"100%\" fill=\"{}\" />\n",
         bg_color
     ));
 
-    // ==========================================
-    // --- GRAPH AREA (Left Side) ---
-    // ==========================================
+    // graoh area
     svg.push_str("  <g id=\"graph_area\">\n");
 
-    // Draw Edges First (so they appear underneath nodes)
+    // draw edges
     for edge in edges {
         if !edge.visible {
             continue;
@@ -120,13 +118,12 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         let source_pos = nodes[edge.source].pos;
         let target_pos = nodes[edge.target].pos;
 
-        // Use padding_x and padding_y
         let x1 = source_pos.x - min_x + padding_x;
         let y1 = source_pos.y - min_y + padding_y;
         let x2 = target_pos.x - min_x + padding_x;
         let y2 = target_pos.y - min_y + padding_y;
 
-        // Calculate distance and angles to offset arrowheads so they don't hide under the nodes
+        // arrowheads
         let dx = x2 - x1;
         let dy = y2 - y1;
         let dist = (dx * dx + dy * dy).sqrt();
@@ -138,7 +135,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         let ux = dx / dist;
         let uy = dy / dist;
 
-        // Pull the line back by 16px (14px node radius + 2px gap)
+        // pull the line back by 16px (14px node radius + 2px gap)
         let offset = 16.0;
         let start_x = if edge.bidirectional {
             x1 + ux * offset
@@ -160,7 +157,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         };
         let marker_end = " marker-end=\"url(#arrow-end)\"";
 
-        // Wrap the line in a transparency group to prevent overlap seams with the markers
+        // wrap the line in a transparency group to prevent overlap seams with the markers
         svg.push_str("    <g opacity=\"0.6\">\n");
         svg.push_str(&format!(
             "      <line x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\" stroke=\"{}\" stroke-width=\"1.5\"{}{} />\n",
@@ -168,27 +165,26 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         ));
         svg.push_str("    </g>\n");
 
-        // Draw the Edge Label
+        // edge label
         let mid_x = (x1 + x2) / 2.0;
         let mid_y = (y1 + y2) / 2.0;
 
         let mut angle_deg = dy.atan2(dx).to_degrees();
         let mut is_flipped = false;
 
-        // Flip the angle if the line is pointing backwards to keep text readable
+        // flip the table
         if angle_deg > 90.0 || angle_deg < -90.0 {
             angle_deg += 180.0;
             is_flipped = true;
         }
 
-        // Dynamically swap the Y-offsets so labels always stick to their correct arrows
         let (fwd_y, rev_y) = if is_flipped {
-            (-6.0, 14.0) // Pointing left: Forward arrow is on Top
+            (-6.0, 14.0)
         } else {
-            (14.0, -6.0) // Pointing right: Forward arrow is on Bottom
+            (14.0, -6.0)
         };
 
-        // Helper closure to stack multiple labels vertically using <tspan>
+        // helper closure to stack multiple labels vertically
         let draw_label = |label_str: &str,
                           base_y: f32,
                           svg_out: &mut String| {
@@ -230,27 +226,26 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         }
     }
 
-    // Draw Nodes
+    // draw nodes
     for node in nodes {
         if !node.visible {
             continue;
         }
 
-        // Use padding_x and padding_y
+        // use padding_x and padding_y
         let x = node.pos.x - min_x + padding_x;
         let y = node.pos.y - min_y + padding_y;
 
         let node_color = theme.get_node_colors(&node.rdf_type).normal;
         let fill_hex = color_to_hex(node_color);
-        let radius = 14.0; // Uniform size
+        let radius = 14.0;
 
         svg.push_str(&format!(
             "    <circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{:.1}\" fill=\"{}\" stroke=\"{}\" stroke-width=\"2\" />\n",
             x, y, radius, fill_hex, bg_color
         ));
 
-        // Node Label
-        // Node Label
+        // node Label
         let display_label = truncate_text(&node.label, 30);
 
         svg.push_str(&format!(
@@ -263,28 +258,26 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     }
     svg.push_str("  </g>\n");
 
-    // ==========================================
-    // --- EXTERNAL INFO PANEL (Right Side) ---
-    // ==========================================
+    // info panel
     svg.push_str(&format!(
         "  <g id=\"info_panel\" transform=\"translate({}, 0)\">\n",
         graph_width
     ));
 
-    // Panel Background (Slightly darker/lighter than master_bg to separate it)
+    // panel background
     let panel_bg = color_to_hex(theme.button_bg);
     svg.push_str(&format!(
         "    <rect x=\"0\" y=\"0\" width=\"{}\" height=\"{}\" fill=\"{}\" />\n",
         panel_width, total_height, panel_bg
     ));
 
-    // Legend Header
+    // legend header
     svg.push_str(&format!(
         "    <text x=\"20\" y=\"155\" fill=\"{}\" font-size=\"18\" font-weight=\"bold\">Legend</text>\n",
         text_color
     ));
 
-    // Render Legend entries from the theme dynamically
+    // render Legend entries
     let mut current_y = 190.0;
     for (rdf_type, colors) in &theme.node_map {
         let clean_name = rdf_type
@@ -313,11 +306,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     svg
 }
 
-// ---------------------------------------------------------
-// New Data Generation Implementations
-// ---------------------------------------------------------
-
-/// Reconstructs the N3 structure using the pure backend dataset rather than UI nodes
+// generate a n3 string
 pub fn generate_n3(triples: &[crate::parser::RawTriple]) -> String {
     let mut n3 = String::new();
 
@@ -328,7 +317,7 @@ pub fn generate_n3(triples: &[crate::parser::RawTriple]) -> String {
     n3
 }
 
-/// Generates a comprehensive JSON mapping of the active Graph state
+// generate a json string
 pub fn generate_json(nodes: &[Node], edges: &[Edge]) -> String {
     let export_obj = serde_json::json!({
         "nodes": nodes.iter().filter(|n| n.visible).map(|n| {
@@ -358,10 +347,7 @@ pub fn generate_json(nodes: &[Node], edges: &[Edge]) -> String {
         .unwrap_or_else(|_| "{}".to_string())
 }
 
-// ---------------------------------------------------------
-// I/O File Trigger Handlers
-// ---------------------------------------------------------
-
+// save file trigger
 #[cfg(target_arch = "wasm32")]
 pub fn save_file(filename: &str, content: &str, mime_type: &str) {
     use wasm_bindgen::JsCast;
@@ -392,16 +378,14 @@ pub fn save_file(filename: &str, content: &str, mime_type: &str) {
     }
 }
 
+// jeet it to the project dir for standalone version
 #[cfg(not(target_arch = "wasm32"))]
 pub fn save_file(filename: &str, content: &str, _mime_type: &str) {
-    // 1. Explicitly grab the Current Working Directory
     let cwd = std::env::current_dir()
         .unwrap_or_else(|_| std::path::PathBuf::from("."));
 
-    // 2. Append the filename to the CWD
     let full_path = cwd.join(filename);
 
-    // 3. Write directly to that absolute path
     if let Err(e) = std::fs::write(&full_path, content) {
         log::error!("Failed to save to {:?}: {}", full_path, e);
     } else {
@@ -457,18 +441,16 @@ pub fn save_png_from_svg(svg_data: &str, filename: &str) {
     use resvg::tiny_skia::{Pixmap, Transform};
     use resvg::usvg::{Options, Tree, fontdb};
 
-    // 1. Load system fonts so the text in the SVG renders correctly
+    // load system fonts
     let mut font_db = fontdb::Database::new();
     font_db.load_system_fonts();
 
-    // Extract the name as an owned String to release the immutable borrow immediately
     let fallback_family = font_db
         .faces()
         .next()
         .and_then(|face| face.families.first())
         .map(|(name, _)| name.clone());
 
-    // Now it is safe to mutably borrow font_db
     if let Some(family_name) = fallback_family {
         font_db.set_sans_serif_family(family_name.as_str());
     } else {
@@ -479,23 +461,20 @@ pub fn save_png_from_svg(svg_data: &str, filename: &str) {
 
     let mut opt = Options::default();
 
-    // Attach our loaded fonts to the options so resvg uses them!
+    // attach font to options
     opt.fontdb = std::sync::Arc::new(font_db);
 
-    // 2. Parse the SVG string into a render tree
+    // parse the SVG string into a render tree and save it
     match Tree::from_str(svg_data, &opt) {
         Ok(tree) => {
-            // 3. Create a pixel buffer matching the SVG's exact dimensions
             let size = tree.size().to_int_size();
             if let Some(mut pixmap) = Pixmap::new(size.width(), size.height()) {
-                // 4. Render the SVG mathematically into the pixel buffer
                 resvg::render(
                     &tree,
                     Transform::default(),
                     &mut pixmap.as_mut(),
                 );
 
-                // 5. Save to Current Working Directory
                 let cwd = std::env::current_dir()
                     .unwrap_or_else(|_| std::path::PathBuf::from("."));
                 let full_path = cwd.join(filename);

@@ -205,23 +205,9 @@ macro_rules! draw_node {
 
         let font_size = 12.0 * $app.ui.zoom;
         if font_size > 4.0 {
-            let display_text = if $node.label.len() > 50 {
-                let pred_name = $edges
-                    .iter()
-                    .find(|e| e.target == $index)
-                    .map(|e| e.label.clone())
-                    .unwrap_or_else(|| "Dataset".to_string());
-                let display_pred = {
-                    let mut c = pred_name.chars();
-                    match c.next() {
-                        None => String::new(),
-                        Some(f) => {
-                            f.to_uppercase().collect::<String>() + c.as_str()
-                        }
-                    }
-                };
-
-                format!("{} (Click to show)", display_pred)
+            let display_text = if $node.label.chars().count() > 50 {
+                let truncated: String = $node.label.chars().take(47).collect();
+                format!("{}...", truncated)
             } else {
                 $node.label.clone()
             };
