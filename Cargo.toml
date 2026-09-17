@@ -36,3 +36,14 @@ web-sys = { version = "0.3", features = [
     "CanvasRenderingContext2d",
     "Url"
 ] }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+

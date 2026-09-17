@@ -148,7 +148,6 @@ impl App {
                         }
                     }
 
-                    // TODO: implement literals
                     // visibility logic
                     let clean_subj =
                         t.subject.trim_matches(|c| c == '<' || c == '>');
@@ -160,11 +159,12 @@ impl App {
                     let obj_vis = visible_node_ids.contains(clean_obj)
                         || visible_node_ids.contains(t.object.as_str());
 
-                    let is_triple_visible = if t.predicate == rdf_type_uri {
-                        subj_vis
-                    } else {
-                        subj_vis && obj_vis
-                    };
+                    let is_triple_visible =
+                        if t.predicate == rdf_type_uri || t.is_object_literal {
+                            subj_vis
+                        } else {
+                            subj_vis && obj_vis
+                        };
 
                     if is_triple_visible {
                         visible_triples_count += 1;
@@ -212,10 +212,6 @@ impl App {
 
                 let literal_nodes =
                     nodes.iter().filter(|n| n.node_type == "Attribute").count();
-                let visible_literal_nodes = nodes
-                    .iter()
-                    .filter(|n| n.node_type == "Attribute" && n.visible)
-                    .count();
 
                 let blank_nodes =
                     nodes.iter().filter(|n| n.node_type == "BlankNode").count();
@@ -352,7 +348,7 @@ impl App {
                                             col3_width,
                                             "Literal Nodes",
                                             &literal_nodes.to_string(),
-                                            &visible_literal_nodes.to_string(),
+                                            &visible_nodes.to_string(),
                                         );
                                         self.render_stat_row(
                                             ui,
