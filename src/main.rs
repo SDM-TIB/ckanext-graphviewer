@@ -295,10 +295,6 @@ pub fn get_n3_url_from_dom() -> Option<String> {
     let n3_path = canvas.get_attribute("data-n3")?;
     let mut origin = String::from("");
 
-    if n3_path.starts_with("http://") || n3_path.starts_with("https://") {
-        return Some(n3_path);
-    }
-
     let mut root_path = String::new();
     if let Some(document) = window.document() {
         if let Some(canvas) = document.get_element_by_id("the_canvas_id") {
@@ -316,6 +312,13 @@ pub fn get_n3_url_from_dom() -> Option<String> {
     }
 
     let clean_path = n3_path.trim_start_matches('/');
+
+    if clean_path.contains("..")
+        || clean_path.contains("%2e")
+        || clean_path.contains("%2E")
+    {
+        return None;
+    }
 
     Some(format!("{}{}/dataset/{}", origin, root_path, clean_path))
 }
@@ -483,7 +486,20 @@ impl App {
     }
 
     pub fn trigger_autocomplete_fetch(&self) {
-        // 1. Determine which Solr field we are querying based on the dropdown
+        let special_chars = [
+            '+', '-', '&', '|', '!', '(', ')', '{', '}', '[', ']', '^', '"',
+            '~', '*', '?', ':', '\\', '/',
+        ];
+        let mut escaped_input =
+            String::with_capacity(self.search.search_input.len());
+        for c in self.search.search_input.chars() {
+            if special_chars.contains(&c) {
+                escaped_input.push('\\');
+            }
+            escaped_input.push(c);
+        }
+
+        // determine which Solr field we are querying based on the dropdown
         let (field, value) = match self.search.search_type {
             SearchType::AuthorName => (
                 "author",
@@ -493,7 +509,7 @@ impl App {
                 "title",
                 urlencoding::encode(&self.search.search_input).into_owned(),
             ),
-            _ => return, // Ignore auto-complete for other search types
+            _ => return,
         };
 
         let query_string = format!(

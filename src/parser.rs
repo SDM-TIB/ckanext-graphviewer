@@ -82,67 +82,67 @@ pub fn parse_dynamic_api_json(json_text: &str) -> Vec<RawTriple> {
 }
 
 // helper function for dynamic json
-fn parse_nested_properties(
-    subject: &str,
-    properties: &serde_json::Map<String, Value>,
+fn parse_nested_properties<'a>(
+    initial_subject: &'a str,
+    initial_properties: &'a serde_json::Map<String, Value>,
     triples: &mut Vec<RawTriple>,
 ) {
-    let subj_str = format!("<{}>", subject);
+    let mut stack = vec![(initial_subject, initial_properties)];
 
-    for (predicate, value) in properties {
-        let pred_str = format!("<{}>", predicate);
+    while let Some((subject, properties)) = stack.pop() {
+        let subj_str = format!("<{}>", subject);
 
-        match value {
-            // case 1 a single leaf object
-            Value::Object(obj) => {
-                parse_leaf_value(&subj_str, &pred_str, obj, triples);
-            }
-            // case 2 array of items
-            Value::Array(arr) => {
-                for item in arr {
-                    match item {
-                        // case 2a an array of uri
-                        Value::String(s) => {
-                            triples.push(RawTriple {
-                                subject: subj_str.clone(),
-                                predicate: pred_str.clone(),
-                                object: format!("<{}>", s),
-                                is_object_literal: false,
-                            });
-                        }
-                        // case 2b complex case
-                        Value::Object(obj) => {
-                            if obj.contains_key("type")
-                                && obj.contains_key("value")
-                            {
-                                parse_leaf_value(
-                                    &subj_str, &pred_str, obj, triples,
-                                );
-                            } else if let (
-                                Some(Value::String(uri)),
-                                Some(Value::Object(nested_props)),
-                            ) =
-                                (obj.get("uri"), obj.get("properties"))
-                            {
+        for (predicate, value) in properties {
+            let pred_str = format!("<{}>", predicate);
+
+            match value {
+                // single leaf object
+                Value::Object(obj) => {
+                    parse_leaf_value(&subj_str, &pred_str, obj, triples);
+                }
+                // array of items
+                Value::Array(arr) => {
+                    for item in arr {
+                        match item {
+                            // array of uri
+                            Value::String(s) => {
                                 triples.push(RawTriple {
                                     subject: subj_str.clone(),
                                     predicate: pred_str.clone(),
-                                    object: format!("<{}>", uri),
+                                    object: format!("<{}>", s),
                                     is_object_literal: false,
                                 });
-
-                                parse_nested_properties(
-                                    uri,
-                                    nested_props,
-                                    triples,
-                                );
                             }
+                            // complex case
+                            Value::Object(obj) => {
+                                if obj.contains_key("type")
+                                    && obj.contains_key("value")
+                                {
+                                    parse_leaf_value(
+                                        &subj_str, &pred_str, obj, triples,
+                                    );
+                                } else if let (
+                                    Some(Value::String(uri)),
+                                    Some(Value::Object(nested_props)),
+                                ) =
+                                    (obj.get("uri"), obj.get("properties"))
+                                {
+                                    triples.push(RawTriple {
+                                        subject: subj_str.clone(),
+                                        predicate: pred_str.clone(),
+                                        object: format!("<{}>", uri),
+                                        is_object_literal: false,
+                                    });
+
+                                    stack.push((uri, nested_props));
+                                }
+                            }
+                            _ => {}
                         }
-                        _ => {}
                     }
                 }
+                _ => {}
             }
-            _ => {}
         }
     }
 }

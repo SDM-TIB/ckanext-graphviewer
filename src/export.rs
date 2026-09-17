@@ -20,6 +20,16 @@ fn truncate_text(text: &str, max_chars: usize) -> String {
     }
 }
 
+// helper to escape XML control characters
+fn escape_xml(input: &str) -> String {
+    input
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
+}
+
 // Generates an SVG string containing the graph and an external information panel
 pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     // calculate the bounding box of the visible graph
@@ -219,10 +229,12 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
             svg_out.push_str("    </text>\n");
         };
 
-        draw_label(&edge.label, fwd_y, &mut svg);
+        let escaped_label = escape_xml(&edge.label);
+        draw_label(&escaped_label, fwd_y, &mut svg);
 
         if let Some(rev_label) = &edge.reverse_label {
-            draw_label(rev_label, rev_y, &mut svg);
+            let escaped_rev_label = escape_xml(rev_label);
+            draw_label(&escaped_rev_label, rev_y, &mut svg);
         }
     }
 
@@ -246,7 +258,7 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
         ));
 
         // node Label
-        let display_label = truncate_text(&node.label, 30);
+        let display_label = escape_xml(&truncate_text(&node.label, 30));
 
         svg.push_str(&format!(
             "    <text x=\"{:.1}\" y=\"{:.1}\" fill=\"{}\" font-size=\"12\" text-anchor=\"middle\">{}</text>\n",
@@ -280,13 +292,15 @@ pub fn generate_svg(nodes: &[Node], edges: &[Edge], theme: &Theme) -> String {
     // render Legend entries
     let mut current_y = 190.0;
     for (rdf_type, colors) in &theme.node_map {
-        let clean_name = rdf_type
-            .split('/')
-            .last()
-            .unwrap_or(rdf_type)
-            .split('#')
-            .last()
-            .unwrap_or(rdf_type);
+        let clean_name = escape_xml(
+            rdf_type
+                .split('/')
+                .last()
+                .unwrap_or(rdf_type)
+                .split('#')
+                .last()
+                .unwrap_or(rdf_type),
+        );
 
         svg.push_str(&format!(
             "    <circle cx=\"30\" cy=\"{:.1}\" r=\"8\" fill=\"{}\" />\n",
