@@ -2,6 +2,7 @@ pub mod api_client;
 pub mod constants;
 pub mod export;
 mod graph_processor;
+pub mod import;
 pub mod makro;
 mod node_menu;
 mod parser;
@@ -194,6 +195,9 @@ pub struct UIState {
     // Inspector Panel
     pub inspector_selected_node: Option<String>,
     pub inspector_search_text: String,
+
+    // file import
+    pub trigger_import: bool,
 }
 
 struct App {
@@ -481,6 +485,7 @@ impl App {
                 show_info_window: true,
                 inspector_selected_node: None,
                 inspector_search_text: String::new(),
+                trigger_import: false,
             },
         }
     }
@@ -721,13 +726,20 @@ impl eframe::App for App {
                                     .clicked()
                                 {
                                     let filename = format!("LDM_graph_export_{}.json", timestamp);
-                                    let json_data = crate::export::generate_json(nodes, edges);
+                                    let json_data = crate::export::generate_json(nodes, edges, raw_triples);
                                     crate::export::save_file(&filename, &json_data, "application/json");
                                     ui.close();
                                 }
                             })
                             .response
                             .on_hover_text("Open a window to download information about the graph");
+
+                            if ui.button("Import")
+                                .on_hover_text("Load a previously exported JSON file")
+                                .clicked()
+                            {
+                                self.ui.trigger_import = true;
+                            }
                         });
                     });
                     ui.separator();
@@ -754,6 +766,14 @@ impl eframe::App for App {
                 }
             }
         });
+
+        if self.ui.trigger_import {
+            self.ui.trigger_import = false;
+            crate::import::trigger_json_import(
+                self.graph_data.clone(),
+                ctx.clone(),
+            );
+        }
     }
 }
 

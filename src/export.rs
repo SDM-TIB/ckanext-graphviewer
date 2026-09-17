@@ -331,8 +331,11 @@ pub fn generate_n3(triples: &[crate::parser::RawTriple]) -> String {
     n3
 }
 
-// generate a json string
-pub fn generate_json(nodes: &[Node], edges: &[Edge]) -> String {
+pub fn generate_json(
+    nodes: &[Node],
+    edges: &[Edge],
+    raw_triples: &[crate::parser::RawTriple],
+) -> String {
     let export_obj = serde_json::json!({
         "nodes": nodes.iter().filter(|n| n.visible).map(|n| {
             serde_json::json!({
@@ -346,6 +349,7 @@ pub fn generate_json(nodes: &[Node], edges: &[Edge]) -> String {
                 }).collect::<Vec<_>>()
             })
         }).collect::<Vec<_>>(),
+
         "edges": edges.iter().filter(|e| e.visible).map(|e| {
             serde_json::json!({
                 "source": nodes[e.source].id,
@@ -353,6 +357,15 @@ pub fn generate_json(nodes: &[Node], edges: &[Edge]) -> String {
                 "label": e.label,
                 "reverse_label": e.reverse_label,
                 "bidirectional": e.bidirectional
+            })
+        }).collect::<Vec<_>>(),
+
+        "raw_triples": raw_triples.iter().map(|t| {
+            serde_json::json!({
+                "subject": t.subject,
+                "predicate": t.predicate,
+                "object": t.object,
+                "is_object_literal": t.is_object_literal
             })
         }).collect::<Vec<_>>()
     });

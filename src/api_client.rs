@@ -118,6 +118,7 @@ fn process_graph_update(
                         }
                     } else {
                         n.has_more_to_fetch = false;
+                        n.api_fetched = false;
                     }
                 } else if connected_nodes.contains(&n.id) && !n.visible {
                     n.visible = true;
@@ -291,13 +292,7 @@ pub fn fetch_dataset_information(
     ehttp::fetch(request, move |response| {
         if let Ok(res) = response {
             if let Some(text) = res.text() {
-                process_graph_update(
-                    ctx,
-                    state,
-                    clicked_node_id,
-                    &text,
-                    Some(limit),
-                );
+                process_graph_update(ctx, state, clicked_node_id, &text, None);
             }
         } else {
             process_graph_update(
