@@ -65,25 +65,56 @@ impl App {
                     ui.set_min_height(max_height);
                     ui.set_max_height(max_height);
 
-                    ui.add_sized(
+                    let text_response = ui.add_sized(
                         [max_width, 0.0],
                         egui::TextEdit::singleline(&mut self.ui.inspector_search_text).hint_text("Search nodes..."),
                     );
 
+                    text_response.request_focus();
+
                     ui.separator();
 
                     let search_term = self.ui.inspector_search_text.to_lowercase();
-                    let mut match_found = false;
+
+                    let filtered_nodes: Vec<&Node> = sorted_nodes
+                        .iter()
+                        .copied()
+                        .filter(|node| {
+                            search_term.is_empty() || node.label.to_lowercase().contains(&search_term)
+                        })
+                        .collect();
+
+                    let match_found = !filtered_nodes.is_empty();
+
+                    let index_id = ui.id().with("inspector_highlight_index");
+                    let mut highlighted_index: usize = ui.data_mut(|d| d.get_temp(index_id).unwrap_or(0));
+
+                    if text_response.changed() {
+                        highlighted_index = 0;
+                    }
+
+                    if ui.input(|i| i.key_pressed(egui::Key::ArrowDown)) {
+                        highlighted_index = highlighted_index.saturating_add(1).min(filtered_nodes.len().saturating_sub(1));
+                    }
+                    if ui.input(|i| i.key_pressed(egui::Key::ArrowUp)) {
+                        highlighted_index = highlighted_index.saturating_sub(1);
+                    }
+                    if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                        if let Some(node) = filtered_nodes.get(highlighted_index) {
+                            self.ui.inspector_selected_node = Some(node.id.clone());
+                            self.ui.inspector_search_text.clear();
+                            egui::Popup::close_id(ui.ctx(), popup_id);
+                        }
+                    }
+
+                    ui.data_mut(|d| d.insert_temp(index_id, highlighted_index));
 
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        for node in sorted_nodes {
-                            let uri_tail = node.id.split('/').last().unwrap_or(&node.id).split('#').last().unwrap_or(&node.id);
-                            let display_text = format!("{} ({})", node.label, uri_tail);
+                        if match_found {
+                            for (i, node) in filtered_nodes.iter().enumerate() {
+                                let display_text = format!("{}", node.label);
 
-                            if search_term.is_empty() || display_text.to_lowercase().contains(&search_term) {
-                                match_found = true;
-
-                                let is_selected = self.ui.inspector_selected_node == Some(node.id.clone());
+                                let is_selected = self.ui.inspector_selected_node == Some(node.id.clone()) || i == highlighted_index;
 
                                 let row_response = ui.add_sized([max_width, 0.0], egui::Button::selectable(is_selected, display_text));
 
@@ -92,10 +123,12 @@ impl App {
                                     self.ui.inspector_search_text.clear();
                                     egui::Popup::close_id(ui.ctx(), popup_id);
                                 }
-                            }
-                        }
 
-                        if !match_found {
+                                if i == highlighted_index && ui.input(|i| i.key_pressed(egui::Key::ArrowDown) || i.key_pressed(egui::Key::ArrowUp)) {
+                                    row_response.scroll_to_me(Some(egui::Align::Center));
+                                }
+                            }
+                        } else {
                             ui.label(
                                 egui::RichText::new("No matching nodes found.")
                                     .color(self.ui.theme.dimmed_text_fg)
@@ -105,7 +138,6 @@ impl App {
                     });
                 });
             });
-
             ui.separator();
 
             if let Some(selected_id) = self.ui.inspector_selected_node.clone() {
