@@ -243,25 +243,48 @@ impl App {
                 *self.search.search_failed.lock().unwrap() = false;
                 *self.search.is_fetching.lock().unwrap() = true;
 
+                // Sanitize input to gracefully handle both full URL formats and raw IDs
+                let mut clean_input = self.search.search_input.to_string();
+                match self.search.search_type {
+                    SearchType::AuthorOrcid => {
+                        clean_input = clean_input
+                            .trim_start_matches("https://orcid.org/")
+                            .trim_start_matches("http://orcid.org/")
+                            .trim_start_matches("orcid.org/")
+                            .to_string();
+                    }
+                    SearchType::AuthorLdmId | SearchType::DatasetLdmId => {
+                        clean_input = clean_input
+                            .trim_start_matches("https://research.tib.eu/ldm/")
+                            .trim_start_matches("http://research.tib.eu/ldm/")
+                            .to_string();
+                    }
+
+                    _ => {}
+                }
+
                 let state_clone = self.graph_data.clone();
                 let ctx_clone = ctx.clone();
-                let input = self.search.search_input.clone();
+                let input = clean_input;
                 let search_type = self.search.search_type.clone();
                 let failed_clone = self.search.search_failed.clone();
                 let fetching_clone = self.search.is_fetching.clone();
                 let base_url = self.config.api_url.clone();
 
+                let layout_clone = self.ui.current_layout;
+                let root_node_arc = self.ui.root_node.clone();
+
                 // info!("base_url: {}", base_url);
 
                 let target_url = match search_type {
                     SearchType::AuthorName => format!("{}/get_dataset_information_by_author_name?author_name={}", base_url, input),
-                    SearchType::AuthorOrcid => format!("{}/get_dataset_information_by_author_orcid?author_orcid={}", base_url, input),
-                    SearchType::AuthorLdmId => format!("{}/get_dataset_information_by_author_ldm_id?author_ldm_id={}", base_url, input),
+                    SearchType::AuthorOrcid => format!("{}/get_dataset_information_by_author_orcid?author_orcid=https://orcid.org/{}", base_url, input),
+                    SearchType::AuthorLdmId => format!("{}/get_dataset_information_by_author_ldm_id?author_ldm_id=https://research.tib.eu/ldm/{}", base_url, input),
                     SearchType::PaperDoi => format!("{}/get_dataset_information_by_paper_doi?paper_doi={}", base_url, input),
                     SearchType::PaperTitle => format!("{}/get_dataset_information_by_paper_title?paper_title={}", base_url, input),
                     SearchType::DatasetDoi => format!("{}/get_dataset_information_by_dataset_doi?dataset_doi={}", base_url, input),
                     SearchType::DatasetTitle => format!("{}/get_dataset_information_by_dataset_title?dataset_title={}", base_url, input),
-                    SearchType::DatasetLdmId => format!("{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id={}", base_url, input),
+                    SearchType::DatasetLdmId => format!("{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id=https://research.tib.eu/ldm/{}", base_url, input),
                 };
 
                 let request = ehttp::Request::get(&target_url);
@@ -281,7 +304,16 @@ impl App {
                                 combined_triples.sort();
                                 combined_triples.dedup();
 
-                                let (nodes, edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&input));
+                                let preferred_root = if search_type == SearchType::AuthorLdmId {
+                                    format!("https://research.tib.eu/ldm/{}", input)
+                                } else {
+                                    input.clone()
+                                };
+
+                                let (mut nodes, edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&preferred_root));
+
+                                let mut root_lock = root_node_arc.lock().unwrap();
+                                crate::layouts::apply(layout_clone, &mut nodes, &edges, &mut *root_lock);
 
                                 let init_snapshot = crate::GraphSnapshot::new(&nodes, &edges);
 
