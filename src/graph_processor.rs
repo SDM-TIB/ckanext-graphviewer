@@ -377,6 +377,9 @@ fn finalize_graph(
     for (id, mut node) in nodes_map {
         id_to_index.insert(id, nodes.len());
         node.original_pos = node.pos;
+
+        node.is_root = node.id == start_node;
+
         nodes.push(node);
     }
 

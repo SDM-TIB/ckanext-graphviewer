@@ -27,6 +27,8 @@ pub fn draw_radial_menu(
     show_menu: &mut bool,
     selected_node: &mut Option<usize>,
     clicked_to_expand: &mut Option<usize>,
+    layout: crate::GraphLayout,
+    root_node: Arc<Mutex<Option<String>>>,
 ) {
     let menu_radius = 45.0 * zoom;
     let btn_radius = 12.0 * zoom;
@@ -122,6 +124,8 @@ pub fn draw_radial_menu(
                     nodes[menu_idx].fetch_offset,
                     49,
                     api_url,
+                    layout,            // <-- ADDED THIS
+                    root_node.clone(), // <-- ADDED THIS
                 );
             }
 
@@ -136,6 +140,8 @@ pub fn draw_radial_menu(
                     nodes[menu_idx].fetch_offset,
                     49,
                     api_url,
+                    layout,            // <-- ADDED THIS
+                    root_node.clone(), // <-- ADDED THIS
                 );
             }
 
@@ -148,6 +154,8 @@ pub fn draw_radial_menu(
                     nodes[menu_idx].fetch_offset,
                     49,
                     api_url,
+                    layout,            // <-- ADDED THIS
+                    root_node.clone(), // <-- ADDED THIS
                 );
             }
 
@@ -160,6 +168,8 @@ pub fn draw_radial_menu(
                     nodes[menu_idx].fetch_offset,
                     49,
                     api_url,
+                    layout,            // <-- ADDED THIS
+                    root_node.clone(), // <-- ADDED THIS
                 );
             }
         } else {

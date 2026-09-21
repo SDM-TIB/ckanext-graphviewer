@@ -11,6 +11,8 @@ fn process_graph_update(
     clicked_node_id: String,
     json_text: &str,
     pagination_limit: Option<usize>,
+    layout: crate::GraphLayout,
+    root_node: Arc<Mutex<Option<String>>>,
 ) {
     let new_triples = crate::parser::parse_dynamic_api_json(json_text);
 
@@ -118,7 +120,7 @@ fn process_graph_update(
                         }
                     } else {
                         n.has_more_to_fetch = false;
-                        n.api_fetched = false;
+                        n.api_fetched = true;
                     }
                 } else if connected_nodes.contains(&n.id) && !n.visible {
                     n.visible = true;
@@ -143,23 +145,25 @@ fn process_graph_update(
             }
         }
 
-        // position new nodes radially
-        let total_layout = nodes_to_layout.len();
-        if total_layout > 0 {
-            let mut angle: f32 = 0.0;
-            let angle_step = std::f32::consts::TAU / (total_layout as f32);
-            let spawn_radius = 240.0;
+        // position new nodes radially ONLY if layout is Radial
+        if layout == crate::GraphLayout::Radial {
+            let total_layout = nodes_to_layout.len();
+            if total_layout > 0 {
+                let mut angle: f32 = 0.0;
+                let angle_step = std::f32::consts::TAU / (total_layout as f32);
+                let spawn_radius = 240.0;
 
-            for idx in nodes_to_layout {
-                let target_pos = clicked_pos
-                    + egui::vec2(
-                        angle.cos() * spawn_radius,
-                        angle.sin() * spawn_radius,
-                    );
-                angle += angle_step;
+                for idx in nodes_to_layout {
+                    let target_pos = clicked_pos
+                        + egui::vec2(
+                            angle.cos() * spawn_radius,
+                            angle.sin() * spawn_radius,
+                        );
+                    angle += angle_step;
 
-                new_nodes[idx].pos = target_pos;
-                new_nodes[idx].original_pos = target_pos;
+                    new_nodes[idx].pos = target_pos;
+                    new_nodes[idx].original_pos = target_pos;
+                }
             }
         }
 
@@ -179,6 +183,17 @@ fn process_graph_update(
             }
         }
 
+        // apply layout if it is not radical
+        if layout != crate::GraphLayout::Radial {
+            let mut root_lock = root_node.lock().unwrap();
+            crate::layouts::apply(
+                layout,
+                &mut new_nodes,
+                &new_edges,
+                &mut *root_lock,
+            );
+        }
+
         *nodes = new_nodes;
         *edges = new_edges;
     }
@@ -195,6 +210,8 @@ pub fn fetch_keyword_information(
     offset: usize,
     limit: usize,
     api_url: &str,
+    layout: crate::GraphLayout,
+    root_node: Arc<Mutex<Option<String>>>,
 ) {
     let url = format!(
         "{}/get_dataset_information_by_keyword?keyword={}&limit={}&offset={}",
@@ -214,6 +231,8 @@ pub fn fetch_keyword_information(
                     clicked_node_id,
                     &text,
                     Some(limit),
+                    layout,
+                    root_node.clone(),
                 );
             }
         } else {
@@ -223,6 +242,8 @@ pub fn fetch_keyword_information(
                 clicked_node_id,
                 "{\"results\":{}}",
                 Some(limit),
+                layout,
+                root_node.clone(),
             );
         }
     });
@@ -237,6 +258,8 @@ pub fn fetch_author_information(
     offset: usize,
     limit: usize,
     api_url: &str,
+    layout: crate::GraphLayout,
+    root_node: Arc<Mutex<Option<String>>>,
 ) {
     let url = format!(
         "{}/get_dataset_information_by_author_ldm_id?author_ldm_id={}&limit={}&offset={}",
@@ -256,6 +279,8 @@ pub fn fetch_author_information(
                     clicked_node_id,
                     &text,
                     Some(limit),
+                    layout,
+                    root_node.clone(),
                 );
             }
         } else {
@@ -265,6 +290,8 @@ pub fn fetch_author_information(
                 clicked_node_id,
                 "{\"results\":{}}",
                 Some(limit),
+                layout,
+                root_node.clone(),
             );
         }
     });
@@ -279,6 +306,8 @@ pub fn fetch_dataset_information(
     offset: usize,
     limit: usize,
     api_url: &str,
+    layout: crate::GraphLayout,
+    root_node: Arc<Mutex<Option<String>>>,
 ) {
     let url = format!(
         "{}/get_dataset_information_by_dataset_ldm_id?dataset_ldm_id={}&limit={}&offset={}",
@@ -292,7 +321,15 @@ pub fn fetch_dataset_information(
     ehttp::fetch(request, move |response| {
         if let Ok(res) = response {
             if let Some(text) = res.text() {
-                process_graph_update(ctx, state, clicked_node_id, &text, None);
+                process_graph_update(
+                    ctx,
+                    state,
+                    clicked_node_id,
+                    &text,
+                    None,
+                    layout,
+                    root_node.clone(),
+                );
             }
         } else {
             process_graph_update(
@@ -301,6 +338,8 @@ pub fn fetch_dataset_information(
                 clicked_node_id,
                 "{\"results\":{}}",
                 Some(limit),
+                layout,
+                root_node.clone(),
             );
         }
     });
@@ -315,6 +354,8 @@ pub fn fetch_publisher_information(
     offset: usize,
     limit: usize,
     api_url: &str,
+    layout: crate::GraphLayout,
+    root_node: Arc<Mutex<Option<String>>>,
 ) {
     let url = format!(
         "{}/get_dataset_information_by_publisher?publisher_id={}&limit={}&offset={}",
@@ -334,6 +375,8 @@ pub fn fetch_publisher_information(
                     clicked_node_id,
                     &text,
                     Some(limit),
+                    layout,
+                    root_node.clone(),
                 );
             }
         } else {
@@ -343,6 +386,8 @@ pub fn fetch_publisher_information(
                 clicked_node_id,
                 "{\"results\":{}}",
                 Some(limit),
+                layout,
+                root_node.clone(),
             );
         }
     });

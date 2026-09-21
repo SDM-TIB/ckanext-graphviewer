@@ -3,6 +3,7 @@ pub mod constants;
 pub mod export;
 mod graph_processor;
 pub mod import;
+pub mod layouts;
 pub mod makro;
 mod node_menu;
 mod parser;
@@ -51,6 +52,14 @@ pub enum Scene {
     Graph,
     Analytics,
     NodeInspector,
+}
+
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+pub enum GraphLayout {
+    Radial,
+    Circle,
+    HorizontalHierarchical,
+    VerticalHierarchical,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
@@ -198,6 +207,10 @@ pub struct UIState {
 
     // file import
     pub trigger_import: bool,
+
+    // layout
+    pub current_layout: GraphLayout,
+    pub root_node: Arc<Mutex<Option<String>>>,
 }
 
 struct App {
@@ -486,6 +499,8 @@ impl App {
                 inspector_selected_node: None,
                 inspector_search_text: String::new(),
                 trigger_import: false,
+                current_layout: GraphLayout::Radial,
+                root_node: Arc::new(Mutex::new(None)),
             },
         }
     }

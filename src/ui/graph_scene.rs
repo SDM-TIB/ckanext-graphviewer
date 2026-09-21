@@ -6,6 +6,17 @@ use eframe::egui;
 use log::{debug, error, info, trace, warn};
 
 impl App {
+    pub fn apply_layout(&mut self, nodes: &mut [Node], edges: &[Edge]) {
+        let mut root_lock = self.ui.root_node.lock().unwrap();
+
+        crate::layouts::apply(
+            self.ui.current_layout,
+            nodes,
+            edges,
+            &mut *root_lock,
+        );
+    }
+
     pub fn render_graph_scene(
         &mut self,
         ui: &mut egui::Ui,
@@ -37,7 +48,7 @@ impl App {
                     )
                     .fill(self.ui.theme.button_bg);
 
-                    // restore the view configuration of the inital snapshot
+                    // restore the view configuration of the initial snapshot
                     if ui
                         .add(reset_view_button)
                         .on_hover_text(
@@ -74,10 +85,13 @@ impl App {
                                     .visible_edges
                                     .contains(&(t_id.clone(), s_id.clone()));
                         }
-
-                        *init_snapshot = GraphSnapshot::new(nodes, edges);
+                        if self.ui.current_layout != crate::GraphLayout::Radial {
+                            self.apply_layout(nodes, edges);
+                        }
+                        //*init_snapshot = GraphSnapshot::new(nodes, edges);
                     }
 
+                    // make the complete graph invisible
                     if ui
                         .add(clear_view_button)
                         .on_hover_text("Clear the content of the graph view")
@@ -96,6 +110,99 @@ impl App {
                         self.ui.selected_node = None;
                         self.ui.show_info_window = true;
                     }
+
+                    ui.menu_button("Layout", |ui| {
+                        let r_bg = if self.ui.current_layout == crate::GraphLayout::Radial {
+                            self.ui.theme.menu_expand_bg
+                        } else {
+                            self.ui.theme.button_bg
+                        };
+                        let r_b = egui::Button::new("Radical").fill(r_bg);
+                        if ui.add(r_b)
+                            .on_hover_text("Use a radical layout to display the graph")
+                            .clicked()
+                        {
+                            self.ui.current_layout = crate::GraphLayout::Radial;
+
+                            // Restore camera view and selections
+                            self.ui.zoom = 1.0;
+                            self.ui.pan = egui::vec2(0.0, 0.0);
+                            self.ui.selected_node = None;
+
+                            // Restore node visibility, expansion state, and positions from snapshot
+                            for node in nodes.iter_mut() {
+                                if let Some(&pos) = init_snapshot.node_positions.get(&node.id) {
+                                    node.pos = pos;
+                                } else {
+                                    node.pos = node.original_pos;
+                                }
+                                node.visible = init_snapshot.visible_nodes.contains(&node.id);
+                                node.expanded = init_snapshot.expanded_nodes.contains(&node.id);
+                            }
+
+                            // Restore edge visibility from snapshot
+                            for edge in edges.iter_mut() {
+                                let s_id = &nodes[edge.source].id;
+                                let t_id = &nodes[edge.target].id;
+
+                                edge.visible = init_snapshot.visible_edges.contains(&(s_id.clone(), t_id.clone()))
+                                    || init_snapshot.visible_edges.contains(&(t_id.clone(), s_id.clone()));
+                            }
+
+                            let mut root_lock = self.ui.root_node.lock().unwrap();
+                            crate::layouts::apply(self.ui.current_layout, nodes, edges, &mut *root_lock);
+                            ui.close();
+                        }
+
+                        let c_bg = if self.ui.current_layout == crate::GraphLayout::Circle {
+                            self.ui.theme.menu_expand_bg
+                        } else {
+                            self.ui.theme.button_bg
+                        };
+                        let c_b = egui::Button::new("Circular").fill(c_bg);
+                        if ui.add(c_b)
+                            .on_hover_text("Use a circular layout to display the graph")
+                            .clicked()
+                        {
+                            self.ui.current_layout = crate::GraphLayout::Circle;
+                            let mut root_lock = self.ui.root_node.lock().unwrap();
+                            crate::layouts::apply(self.ui.current_layout, nodes, edges, &mut *root_lock);
+                            ui.close();
+                        }
+
+                        let hh_bg = if self.ui.current_layout == crate::GraphLayout::HorizontalHierarchical {
+                            self.ui.theme.menu_expand_bg
+                        } else {
+                            self.ui.theme.button_bg
+                        };
+                        let hh_b = egui::Button::new("Horizontal Hierarchical").fill(hh_bg);
+                        if ui.add(hh_b)
+                            .on_hover_text("Use a horizontal hierarchical layout to display the graph")
+                            .clicked()
+                        {
+                            self.ui.current_layout = crate::GraphLayout::HorizontalHierarchical;
+                            let mut root_lock = self.ui.root_node.lock().unwrap();
+                            crate::layouts::apply(self.ui.current_layout, nodes, edges, &mut *root_lock);
+                            ui.close();
+                        }
+
+                        let vh_bg = if self.ui.current_layout == crate::GraphLayout::VerticalHierarchical {
+                            self.ui.theme.menu_expand_bg
+                        } else {
+                            self.ui.theme.button_bg
+                        };
+                        let vh_b = egui::Button::new("Vertical Hierarchical").fill(vh_bg);
+                        if ui.add(vh_b)
+                            .on_hover_text("Use a vertical hierarchical layout to display the graph")
+                            .clicked()
+                        {
+                            self.ui.current_layout = crate::GraphLayout::VerticalHierarchical;
+                            let mut root_lock = self.ui.root_node.lock().unwrap();
+                            crate::layouts::apply(self.ui.current_layout, nodes, edges, &mut *root_lock);
+                            ui.close();
+                        }
+
+                    });
                 },
             );
         });
@@ -692,6 +799,8 @@ impl App {
                     &mut self.ui.show_menu,
                     &mut self.ui.selected_node,
                     &mut clicked_to_expand,
+                    self.ui.current_layout,
+                    self.ui.root_node.clone(),
                 );
             }
         }
@@ -740,8 +849,8 @@ impl App {
         if let Some(parent_idx) = clicked_to_expand {
             let is_currently_expanded = nodes[parent_idx].expanded;
 
+            // collapse
             if is_currently_expanded {
-                // traverse down the tree to hide children, stopping if a child is connected to another active parent
                 let mut stack = vec![parent_idx];
 
                 while let Some(current_idx) = stack.pop() {
@@ -782,7 +891,7 @@ impl App {
                     }
                 }
             } else {
-                // expanding: make all connected edges and children visible, arranging newly shown nodes in a circle around the parent
+                // expansion
                 nodes[parent_idx].expanded = true;
                 let mut hidden_children = Vec::new();
                 let mut visible_children_edges = Vec::new();
@@ -826,6 +935,9 @@ impl App {
                     edges[edge_idx].visible = true;
                 }
             }
+            if self.ui.current_layout != crate::GraphLayout::Radial {
+                self.apply_layout(nodes, edges);
+            }
         }
 
         // fetch kg information
@@ -835,6 +947,9 @@ impl App {
             let current_type = nodes[fetch_idx].rdf_type.clone();
             let api_url = self.config.api_url.clone();
             let state = self.graph_data.clone();
+
+            let layout = self.ui.current_layout;
+            let root_node = self.ui.root_node.clone();
 
             // fetch author
             if current_type.contains(crate::constants::TYPE_AUTHOR) {
@@ -846,6 +961,8 @@ impl App {
                     nodes[fetch_idx].fetch_offset,
                     49,
                     &api_url,
+                    layout,
+                    root_node.clone(),
                 );
             }
 
@@ -861,6 +978,8 @@ impl App {
                     nodes[fetch_idx].fetch_offset,
                     49,
                     &api_url,
+                    layout,
+                    root_node.clone(),
                 );
             }
 
@@ -874,6 +993,8 @@ impl App {
                     nodes[fetch_idx].fetch_offset,
                     49,
                     &api_url,
+                    layout,
+                    root_node.clone(),
                 );
             }
 
@@ -887,6 +1008,8 @@ impl App {
                     nodes[fetch_idx].fetch_offset,
                     49,
                     &api_url,
+                    layout,
+                    root_node.clone(),
                 );
             }
         }
