@@ -252,22 +252,22 @@ impl App {
                             .num_columns(2)
                             .spacing([20.0, 8.0])
                             .show(ui, |ui| {
-                                ui.strong("Move Camera:");
+                                ui.strong("Move Graph:");
                                 ui.label("Left-click and drag background");
                                 ui.end_row();
-                                ui.strong("Zoom Camera:");
+                                ui.strong("Zoom Graph:");
                                 ui.label("Scroll wheel or pinch");
                                 ui.end_row();
                                 ui.strong("Move Node:");
                                 ui.label("Left-click and drag a node");
                                 ui.end_row();
-                                ui.strong("Open Infobox of a node:");
+                                ui.strong("Open Infobox of a Node:");
                                 ui.label("Single left-click a node");
                                 ui.end_row();
-                                ui.strong("Expand / Collaps a node:");
+                                ui.strong("Expand / Collapse a Node:");
                                 ui.label("Double left-click a node");
                                 ui.end_row();
-                                ui.strong("Open Context Menu of a node:");
+                                ui.strong("Open Context Menu of a Node:");
                                 ui.label("Right-click a node");
                                 ui.end_row();
                             });
