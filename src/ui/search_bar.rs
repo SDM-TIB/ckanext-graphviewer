@@ -271,8 +271,8 @@ impl App {
                 let fetching_clone = self.search.is_fetching.clone();
                 let base_url = self.config.api_url.clone();
 
-                let layout_clone = self.ui.current_layout;
-                let root_node_arc = self.ui.root_node.clone();
+                //let layout_clone = self.ui.current_layout;
+                //let root_node_arc = self.ui.root_node.clone();
 
                 // info!("base_url: {}", base_url);
 
@@ -304,16 +304,15 @@ impl App {
                                 combined_triples.sort();
                                 combined_triples.dedup();
 
-                                let preferred_root = if search_type == SearchType::AuthorLdmId {
+                                let preferred_root = if search_type == SearchType::AuthorLdmId || search_type == SearchType::DatasetLdmId {
                                     format!("https://research.tib.eu/ldm/{}", input)
+                                } else if search_type == SearchType::AuthorOrcid {
+                                    format!("https://orcid.org/{}", input)
                                 } else {
                                     input.clone()
                                 };
 
-                                let (mut nodes, edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&preferred_root));
-
-                                let mut root_lock = root_node_arc.lock().unwrap();
-                                crate::layouts::apply(layout_clone, &mut nodes, &edges, &mut *root_lock);
+                                let (nodes, edges) = crate::graph_processor::build_ui_graph(combined_triples.clone(), Some(&preferred_root));
 
                                 let init_snapshot = crate::GraphSnapshot::new(&nodes, &edges);
 
