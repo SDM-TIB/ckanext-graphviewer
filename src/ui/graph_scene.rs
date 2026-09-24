@@ -380,20 +380,27 @@ impl App {
                         vec![("The HTML Container can be resized by dragging the white triangle on the bottom right.", false)],
                     ];
 
+                    ui.add_space(3.0);
+
                     for feature_segments in features {
                         ui.horizontal_wrapped(|ui| {
                             ui.spacing_mut().item_spacing.x = 0.0;
-                            ui.label(egui::RichText::new("• ").size(15.0).color(self.ui.theme.text_fg));
+                            ui.label(egui::RichText::new("•  ").size(15.0).color(self.ui.theme.text_fg));
 
-                            for (text, is_bold) in feature_segments {
-                                let mut rich_text = egui::RichText::new(text).size(15.0);
-                                if is_bold {
-                                    rich_text = rich_text.color(self.ui.theme.menu_expand_bg);
-                                } else {
-                                    rich_text = rich_text.color(self.ui.theme.text_fg);
+                            ui.horizontal_wrapped(|ui| {
+                                ui.spacing_mut().item_spacing.x = 0.0;
+
+                                for (text, is_bold) in feature_segments {
+                                    let mut rich_text = egui::RichText::new(text).size(15.0);
+                                    if is_bold {
+                                        rich_text = rich_text.color(self.ui.theme.menu_expand_bg);
+                                    } else {
+                                        rich_text = rich_text.color(self.ui.theme.text_fg);
+                                    }
+                                    ui.label(rich_text);
+                                    ui.add_space(2.0);
                                 }
-                                ui.label(rich_text);
-                            }
+                            });
                         });
                     }
                 });
