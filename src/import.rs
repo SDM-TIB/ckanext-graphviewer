@@ -97,36 +97,101 @@ fn process_json_content(content: &str, state: Arc<Mutex<AppState>>) {
     if let Ok(parsed) = serde_json::from_str::<ImportedGraph>(content) {
         let mut raw_triples = Vec::new();
 
-        for t in parsed.raw_triples {
-            raw_triples.push(crate::parser::RawTriple {
-                subject: t.subject,
-                predicate: t.predicate,
-                object: t.object,
-                is_object_literal: t.is_object_literal,
-            });
+        // 1. Reconstruct raw triples
+        if parsed.raw_triples.is_empty() {
+            // Fallback: If raw_triples are missing (old JSON format), meticulously reconstruct
+            // them from the nodes, properties, and edges arrays so the graph doesn't break.
+            for n in &parsed.nodes {
+                let subj = format!("<{}>", n.id);
+
+                // Reconstruct RDF Types
+                if !n.rdf_type.is_empty() {
+                    for t in n.rdf_type.split(", ") {
+                        raw_triples.push(crate::parser::RawTriple {
+                            subject: subj.clone(),
+                            predicate: format!(
+                                "<{}>",
+                                crate::constants::RDF_TYPE
+                            ),
+                            object: format!("<{}>", t),
+                            is_object_literal: false,
+                        });
+                    }
+                }
+
+                // Reconstruct Literal & URI Properties
+                for p in &n.properties {
+                    let is_lit = p.object.starts_with('"');
+                    let obj = if is_lit {
+                        p.object.clone()
+                    } else {
+                        format!("<{}>", p.object)
+                    };
+                    raw_triples.push(crate::parser::RawTriple {
+                        subject: subj.clone(),
+                        predicate: format!("<{}>", p.predicate), // Clean label will be parsed back accurately
+                        object: obj,
+                        is_object_literal: is_lit,
+                    });
+                }
+            }
+
+            // Reconstruct relationships
+            for e in &parsed.edges {
+                for label in e.label.split(", ") {
+                    raw_triples.push(crate::parser::RawTriple {
+                        subject: format!("<{}>", e.source),
+                        predicate: format!("<{}>", label),
+                        object: format!("<{}>", e.target),
+                        is_object_literal: false,
+                    });
+                }
+                if let Some(rev) = &e.reverse_label {
+                    for label in rev.split(", ") {
+                        raw_triples.push(crate::parser::RawTriple {
+                            subject: format!("<{}>", e.target),
+                            predicate: format!("<{}>", label),
+                            object: format!("<{}>", e.source),
+                            is_object_literal: false,
+                        });
+                    }
+                }
+            }
+        } else {
+            // Direct load for new JSON exports
+            for t in parsed.raw_triples {
+                raw_triples.push(crate::parser::RawTriple {
+                    subject: t.subject,
+                    predicate: t.predicate,
+                    object: t.object,
+                    is_object_literal: t.is_object_literal,
+                });
+            }
         }
 
         raw_triples.sort();
         raw_triples.dedup();
 
-        // build the topology
+        // 2. Build the topology perfectly from the triples using the single source of truth
         let (mut generated_nodes, mut generated_edges) =
             crate::graph_processor::build_ui_graph(raw_triples.clone(), None);
 
-        // reset everything to hidden
+        // 3. Overlay the visual state saved in the JSON
+        // Reset all generated elements to hidden/unexplored first
         for n in &mut generated_nodes {
             n.visible = false;
             n.expanded = false;
-            n.api_fetched = false;
+            n.api_fetched = false; // Ensures clicking '+' triggers an API fetch
             n.has_more_to_fetch = true;
         }
         for e in &mut generated_edges {
             e.visible = false;
         }
 
-        // apply visability
+        // Apply saved positions and visibility for nodes
         let mut json_node_map = std::collections::HashMap::new();
         for n in parsed.nodes {
+            // Clone the ID so the string isn't moved out of `n` before `n` is inserted
             json_node_map.insert(n.id.clone(), n);
         }
 
@@ -135,11 +200,11 @@ fn process_json_content(content: &str, state: Arc<Mutex<AppState>>) {
                 n.pos = eframe::egui::Pos2::new(saved.x, saved.y);
                 n.original_pos = eframe::egui::Pos2::new(saved.x, saved.y);
                 n.visible = true;
-                n.expanded = true;
+                n.expanded = true; // Was expanded when saved
             }
         }
 
-        // edge visability
+        // Apply saved visibility for edges
         let mut json_edge_set = std::collections::HashSet::new();
         for e in parsed.edges {
             json_edge_set.insert((e.source.clone(), e.target.clone()));
