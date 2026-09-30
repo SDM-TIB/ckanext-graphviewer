@@ -357,27 +357,27 @@ impl App {
                     ui.add_space(-20.0);
 
                     ui.vertical_centered(|ui| {
-                        ui.heading(egui::RichText::new("Welcome to the LDM KG traversal Tool")
+                        ui.heading(egui::RichText::new("Welcome to the LDM KG Traversal Tool")
                                    .size(18.0)
                                    .color(self.ui.theme.text_fg)
                                    .strong());
                     });
 
                     ui.label(egui::RichText::new(
-                        "This tool offers you the ability to graphically travers the content of the LDM KG."
+                        "This tool enables you to graphically traverse the content of the LDM knowledge kraph (KG)."
                     ).size(15.0).color(self.ui.theme.text_fg));
 
                     let features = [
                         vec![("Start by selecting a start point type (e.g., Author Name, Dataset Title, or Paper Title) from the dropdown menu in the top search bar.", false)],
-                        vec![("Enter your search term and click ", false), ("Confirm ", true), ("to query the knowledge graph and build the initial view.", false)],
-                        vec![("After loading a starting point, the ", false), ("Graph View ", true), ("will show that information graphically.", false)],
-                        vec![("The ", false), ("Analytics View ", true), ("shows information about the loaded triples.", false)],
-                        vec![("The ", false), ("Node Inspector View ", true), ("can show a tabular view of the information connected to a node.", false)],
+                        vec![("Enter your search term and click ", false), ("Confirm ", true), ("to query the knowledge graph.", false)],
+                        vec![("After loading a starting point, the ", false), ("Graph View ", true), ("visualizes the retrieved information as graph nodes and edges.", false)],
+                        vec![("The ", false), ("Analytics View ", true), ("shows information about the loaded RDF triples.", false)],
+                        vec![("The ", false), ("Node Inspector View ", true), ("shows a tabular view of the information connected to a node.", false)],
                         vec![("The ", false), ("Export ", true), ("button exports the loaded data in different formats.", false)],
-                        vec![("The ", false), ("Colour Mode ", true), ("button gives you the ability to switch between light and dark colour themes.", false)],
-                        vec![("The ", false), ("Reset View ", true), ("button loads the initial view of the graph that was created after confirming a search.", false)],
-                        vec![("On the left is the ", false), ("Legend ", true), ("and further information on Graph ", false), ("Controls.", true)],
-                        vec![("The HTML Container can be resized by dragging the white triangle on the bottom right.", false)],
+                        vec![("The ", false), ("Colour Mode ", true), ("button switches the view between light and dark colour themes.", false)],
+                        vec![("The ", false), ("Reset View ", true), ("button loads the initial view of the graph that was created after submitting your search.", false)],
+                        vec![("A ", false), ("Legend ", true), ("and further information on graph ", false), ("Controls ", true), ("can be found in the top left corner.", false)],
+                        vec![("The KG traversal window can be resized by dragging the white triangle at the bottom right.", false)],
                     ];
 
                     ui.add_space(3.0);
