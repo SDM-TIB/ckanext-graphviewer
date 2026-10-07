@@ -364,7 +364,7 @@ impl App {
                     });
 
                     ui.label(egui::RichText::new(
-                        "This tool enables you to graphically traverse the content of the LDM knowledge kraph (KG)."
+                        "This tool enables you to graphically traverse the content of the LDM knowledge graph (KG)."
                     ).size(15.0).color(self.ui.theme.text_fg));
 
                     let features = [
