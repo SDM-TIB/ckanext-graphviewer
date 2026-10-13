@@ -179,6 +179,8 @@ impl App {
                 egui::Popup::close_id(ui.ctx(), popup_id);
             }
 
+            let mut suggestion_clicked = false;
+
             // render the popup window
             if is_open {
                 let screen_rect = ui.ctx().content_rect();
@@ -216,6 +218,7 @@ impl App {
                                             self.search.search_input = suggestion.to_string();
                                             text_response.surrender_focus();
                                             egui::Popup::close_id(ui.ctx(), popup_id);
+                                            suggestion_clicked = true;
                                         }
                                     }
                                 }
@@ -236,7 +239,7 @@ impl App {
 
             let enter_pressed = text_response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
 
-            if (confirm_clicked || enter_pressed) && !is_currently_fetching {
+            if (confirm_clicked || enter_pressed || suggestion_clicked) && !is_currently_fetching {
                 egui::Popup::close_id(ui.ctx(), popup_id);
 
                 // log::info!("Requested Fetch! Type: {}, Input: {}", self.search.search_type.as_str(), self.search.search_input);
