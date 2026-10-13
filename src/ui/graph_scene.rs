@@ -102,68 +102,79 @@ impl App {
         ui.add_space(3.0);
 
         // draw the infobox of a node
-        let draw_node_details = |ui: &mut egui::Ui, node: &Node| {
-            let total_width = ui.available_width();
-            let col1_width = 80.0;
-            let col2_width = (total_width - col1_width - 15.0).max(100.0);
+        let draw_node_details =
+            |ui: &mut egui::Ui, node: &Node, all_nodes: &[Node]| {
+                let total_width = ui.available_width();
+                let col1_width = 80.0;
+                let col2_width = (total_width - col1_width - 15.0).max(100.0);
 
-            egui::Grid::new(format!("tooltip_grid_{}", node.id))
-                .num_columns(2)
-                .spacing([10.0, 8.0])
-                .show(ui, |ui| {
-                    let display_id = if node.node_type == "Attribute" {
-                        &node.label
-                    } else {
-                        &node.id
-                    };
-
-                    if !display_id.is_empty() {
-                        ui.vertical(|ui| {
-                            ui.set_min_width(col1_width);
-                            ui.set_max_width(col1_width);
-                            ui.strong("ID:");
-                        });
-                        ui.vertical(|ui| {
-                            ui.set_min_width(col2_width);
-                            ui.set_max_width(col2_width);
-                            ui.label(display_id);
-                        });
-                        ui.end_row();
-                    }
-
-                    let mut seen_props = std::collections::HashSet::new();
-
-                    for (key, value) in node.properties.iter() {
-                        if !seen_props.insert((key.clone(), value.clone())) {
-                            continue;
-                        }
-
-                        let display_key = {
-                            let mut c = key.chars();
-                            match c.next() {
-                                None => String::new(),
-                                Some(f) => {
-                                    f.to_uppercase().collect::<String>()
-                                        + c.as_str()
-                                }
-                            }
+                egui::Grid::new(format!("tooltip_grid_{}", node.id))
+                    .num_columns(2)
+                    .spacing([10.0, 8.0])
+                    .show(ui, |ui| {
+                        let display_id = if node.node_type == "Attribute" {
+                            &node.label
+                        } else {
+                            &node.id
                         };
 
-                        ui.vertical(|ui| {
-                            ui.set_min_width(col1_width);
-                            ui.set_max_width(col1_width);
-                            ui.strong(format!("{}:", display_key));
-                        });
+                        if !display_id.is_empty() {
+                            ui.vertical(|ui| {
+                                ui.set_min_width(col1_width);
+                                ui.set_max_width(col1_width);
+                                ui.strong("ID:");
+                            });
+                            ui.vertical(|ui| {
+                                ui.set_min_width(col2_width);
+                                ui.set_max_width(col2_width);
+                                ui.label(display_id);
+                            });
+                            ui.end_row();
+                        }
 
-                        ui.vertical(|ui| {
-                            ui.set_min_width(col2_width);
-                            ui.set_max_width(col2_width);
-                            ui.label(value);
-                        });
-                        ui.end_row();
-                    }
-                });
-        };
+                        let mut seen_props = std::collections::HashSet::new();
+
+                        for (key, value) in node.properties.iter() {
+                            if !seen_props.insert((key.clone(), value.clone()))
+                            {
+                                continue;
+                            }
+
+                            let display_key = {
+                                let mut c = key.chars();
+                                match c.next() {
+                                    None => String::new(),
+                                    Some(f) => {
+                                        f.to_uppercase().collect::<String>()
+                                            + c.as_str()
+                                    }
+                                }
+                            };
+
+                            // Check if the property value matches a node ID in the graph
+                            let display_value = if let Some(connected_node) =
+                                all_nodes.iter().find(|n| n.id == *value)
+                            {
+                                connected_node.label.clone()
+                            } else {
+                                value.clone()
+                            };
+
+                            ui.vertical(|ui| {
+                                ui.set_min_width(col1_width);
+                                ui.set_max_width(col1_width);
+                                ui.strong(format!("{}:", display_key));
+                            });
+
+                            ui.vertical(|ui| {
+                                ui.set_min_width(col2_width);
+                                ui.set_max_width(col2_width);
+                                ui.label(display_value);
+                            });
+                            ui.end_row();
+                        }
+                    });
+            };
 
         // ui frame for legend and controls window
         let combined_outline = egui::Frame::window(&ui.ctx().global_style())
@@ -271,10 +282,9 @@ impl App {
                 });
             });
 
-        // Capture the canvas area before spawning windows
         let canvas_rect = ui.available_rect_before_wrap();
 
-        // NEW: Fixed Infobox Window on the right side
+        // infobox
         if let Some(selected_idx) = self.ui.selected_node {
             if !self.ui.show_menu {
                 let node = &nodes[selected_idx];
@@ -341,7 +351,7 @@ impl App {
                             .id_salt(format!("infobox_scroll_{}", node.id))
                             .auto_shrink([false, false])
                             .show(ui, |ui| {
-                                draw_node_details(ui, node);
+                                draw_node_details(ui, node, nodes);
                             });
                     });
             }
