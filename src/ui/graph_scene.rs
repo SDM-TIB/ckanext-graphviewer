@@ -103,9 +103,13 @@ impl App {
 
         // draw the infobox of a node
         let draw_node_details = |ui: &mut egui::Ui, node: &Node| {
+            let total_width = ui.available_width();
+            let col1_width = 80.0;
+            let col2_width = (total_width - col1_width - 15.0).max(100.0);
+
             egui::Grid::new(format!("tooltip_grid_{}", node.id))
                 .num_columns(2)
-                .spacing([10.0, 4.0])
+                .spacing([10.0, 8.0])
                 .show(ui, |ui| {
                     let display_id = if node.node_type == "Attribute" {
                         &node.label
@@ -114,25 +118,22 @@ impl App {
                     };
 
                     if !display_id.is_empty() {
-                        ui.strong("ID:");
-                        if display_id.len() > 60 {
-                            egui::ScrollArea::vertical()
-                                .id_salt(format!("scroll_id_{}", node.id))
-                                .max_height(60.0)
-                                .min_scrolled_height(0.0)
-                                .show(ui, |ui| {
-                                    ui.label(display_id);
-                                });
-                        } else {
+                        ui.vertical(|ui| {
+                            ui.set_min_width(col1_width);
+                            ui.set_max_width(col1_width);
+                            ui.strong("ID:");
+                        });
+                        ui.vertical(|ui| {
+                            ui.set_min_width(col2_width);
+                            ui.set_max_width(col2_width);
                             ui.label(display_id);
-                        }
+                        });
                         ui.end_row();
                     }
 
                     let mut seen_props = std::collections::HashSet::new();
 
-                    for (i, (key, value)) in node.properties.iter().enumerate()
-                    {
+                    for (key, value) in node.properties.iter() {
                         if !seen_props.insert((key.clone(), value.clone())) {
                             continue;
                         }
@@ -148,22 +149,17 @@ impl App {
                             }
                         };
 
-                        ui.strong(format!("{}:", display_key));
+                        ui.vertical(|ui| {
+                            ui.set_min_width(col1_width);
+                            ui.set_max_width(col1_width);
+                            ui.strong(format!("{}:", display_key));
+                        });
 
-                        if value.len() > 60 {
-                            egui::ScrollArea::vertical()
-                                .id_salt(format!(
-                                    "scroll_prop_{}_{}",
-                                    node.id, i
-                                ))
-                                .max_height(100.0)
-                                .min_scrolled_height(0.0)
-                                .show(ui, |ui| {
-                                    ui.label(value);
-                                });
-                        } else {
+                        ui.vertical(|ui| {
+                            ui.set_min_width(col2_width);
+                            ui.set_max_width(col2_width);
                             ui.label(value);
-                        }
+                        });
                         ui.end_row();
                     }
                 });
@@ -275,9 +271,85 @@ impl App {
                 });
             });
 
-        // initialize viewport space and canvas constraints
-        let background_rect = ui.available_rect_before_wrap();
-        let area_to_fill = ui.available_rect_before_wrap();
+        // Capture the canvas area before spawning windows
+        let canvas_rect = ui.available_rect_before_wrap();
+
+        // NEW: Fixed Infobox Window on the right side
+        if let Some(selected_idx) = self.ui.selected_node {
+            if !self.ui.show_menu {
+                let node = &nodes[selected_idx];
+
+                let infobox_frame =
+                    egui::Frame::window(&ui.ctx().global_style())
+                        .fill(self.ui.theme.button_bg)
+                        .inner_margin(6.0)
+                        .corner_radius(0.0)
+                        .stroke(egui::Stroke::new(
+                            1.0_f32,
+                            self.ui.theme.edge_fg,
+                        ));
+
+                let infobox_width = 350.0;
+                let infobox_height = canvas_rect.height() - 15.0;
+
+                egui::Window::new("node_infobox_window")
+                    .fixed_pos(
+                        canvas_rect.right_top()
+                            + egui::vec2(-infobox_width + 9.0, 0.0),
+                    )
+                    .fixed_size(egui::vec2(infobox_width, infobox_height))
+                    .title_bar(false)
+                    .collapsible(false)
+                    .resizable(false)
+                    .frame(infobox_frame)
+                    .show(ui.ctx(), |ui| {
+                        ui.set_min_width(infobox_width - 24.0);
+                        ui.set_max_width(infobox_width - 24.0);
+                        ui.set_min_height(infobox_height);
+                        ui.set_max_height(infobox_height);
+
+                        ui.horizontal(|ui| {
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::TOP),
+                                |ui| {
+                                    if ui
+                                        .button(
+                                            egui::RichText::new("X")
+                                                .color(self.ui.theme.text_fg)
+                                                .strong(),
+                                        )
+                                        .clicked()
+                                    {
+                                        self.ui.selected_node = None;
+                                    }
+                                    ui.with_layout(
+                                        egui::Layout::left_to_right(
+                                            egui::Align::TOP,
+                                        ),
+                                        |ui| {
+                                            ui.heading(&node.label);
+                                        },
+                                    );
+                                },
+                            );
+                        });
+
+                        ui.separator();
+                        ui.add_space(5.0);
+
+                        egui::ScrollArea::vertical()
+                            .id_salt(format!("infobox_scroll_{}", node.id))
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                draw_node_details(ui, node);
+                            });
+                    });
+            }
+        }
+
+        // initialize viewport space and canvas constraints using the rect we measured earlier
+        let background_rect = canvas_rect;
+        let area_to_fill = canvas_rect;
 
         self.ui.canvas_rect = Some(area_to_fill);
         let screen_center = area_to_fill.center().to_vec2();
@@ -621,16 +693,8 @@ impl App {
             if is_dimmed {
                 // dimmed nodes are drawn immediately (above dimmed edges but below active elements)
                 crate::draw_node!(
-                    index,
-                    node,
-                    response,
-                    true,
-                    self,
-                    ctx,
-                    painter,
-                    edges,
-                    to_screen,
-                    draw_node_details
+                    index, node, response, true, self, ctx, painter, edges,
+                    to_screen
                 );
             } else {
                 nodes_to_draw_on_top.push((index, response));
@@ -666,16 +730,8 @@ impl App {
         for (index, response) in nodes_to_draw_on_top {
             let node = &nodes[index];
             crate::draw_node!(
-                index,
-                node,
-                response,
-                false,
-                self,
-                ctx,
-                painter,
-                edges,
-                to_screen,
-                draw_node_details
+                index, node, response, false, self, ctx, painter, edges,
+                to_screen
             );
         }
 

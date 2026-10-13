@@ -153,34 +153,9 @@ macro_rules! draw_edge {
 
 #[macro_export]
 macro_rules! draw_node {
-    ($index:expr, $node:expr, $response:expr, $is_dimmed:expr, $app:expr, $ctx:expr, $painter:expr, $edges:expr, $to_screen:expr, $draw_node_details:expr) => {
+    ($index:expr, $node:expr, $response:expr, $is_dimmed:expr, $app:expr, $ctx:expr, $painter:expr, $edges:expr, $to_screen:expr) => {
         let screen_pos = $to_screen($node.pos);
         let radius = 15.0 * $app.ui.zoom;
-
-        let is_pinned =
-            $app.ui.selected_node == Some($index) && !$app.ui.show_menu;
-
-        if is_pinned {
-            let offset = egui::vec2(20.0 * $app.ui.zoom, 20.0 * $app.ui.zoom);
-
-            egui::Window::new(format!("node_window_{}", $node.id))
-                .fixed_pos(screen_pos + offset)
-                .title_bar(false)
-                .resizable(false)
-                .collapsible(false)
-                .frame(egui::Frame::popup(&$ctx.global_style()))
-                .show(&$ctx, |ui| {
-                    ui.heading(&$node.label);
-                    ui.separator();
-
-                    $draw_node_details(ui, $node);
-
-                    ui.add_space(5.0);
-                    if ui.button("Close").clicked() {
-                        $app.ui.selected_node = None;
-                    }
-                });
-        }
 
         let node_theme = $app.ui.theme.get_node_colors(&$node.rdf_type);
 
