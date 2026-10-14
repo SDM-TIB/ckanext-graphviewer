@@ -1,6 +1,7 @@
 use crate::graph_processor::Node;
 use eframe::egui;
 
+// apply the layout in a circular design
 pub fn apply_layout(nodes: &mut [Node], visible_indices: &[usize]) {
     let n = visible_indices.len();
     let radius = (n as f32 * 13.0).max(150.0);

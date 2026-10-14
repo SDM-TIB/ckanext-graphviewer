@@ -21,6 +21,7 @@ pub fn apply(
         return;
     }
 
+    // TODO: separate radial into its own file
     match layout {
         GraphLayout::Circle => circle::apply_layout(nodes, &visible_indices),
         GraphLayout::Radial => hierarchy::apply_layout(

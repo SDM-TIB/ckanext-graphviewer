@@ -15,17 +15,17 @@ pub fn apply_layout(
     root_node_id: &mut Option<String>,
     layout_type: HierarchyType,
 ) {
-    // Build adjacency list for visible connections
+    // build adjacency list for visible connections
     let mut adj: HashMap<usize, Vec<usize>> = HashMap::new();
     for e in edges.iter().filter(|e| e.visible) {
         adj.entry(e.source).or_default().push(e.target);
         adj.entry(e.target).or_default().push(e.source);
     }
 
-    // Identify root nodes
+    // identify root node
     let mut roots = Vec::new();
 
-    // 1. Try to use the saved root node
+    // use self.ui.root_node
     if let &mut Some(ref root_id) = root_node_id {
         if let Some(&idx) =
             visible_indices.iter().find(|&&i| nodes[i].id == *root_id)
@@ -34,7 +34,7 @@ pub fn apply_layout(
         }
     }
 
-    // 2. If no saved root (or it's hidden), look for a node with `is_root`
+    // look for is_root field of a node
     if roots.is_empty() {
         for &idx in visible_indices {
             if nodes[idx].is_root {
@@ -46,7 +46,7 @@ pub fn apply_layout(
         }
     }
 
-    // 3. Fallback to node with highest degree
+    // guess the root node
     if roots.is_empty() {
         let max_deg_node = visible_indices
             .iter()
@@ -79,14 +79,14 @@ pub fn apply_layout(
         }
     }
 
-    // Assign isolated components to level 0
+    // assign isolated components to level 0
     for &idx in visible_indices {
         if !levels.contains_key(&idx) {
             levels.insert(idx, 0);
         }
     }
 
-    // Calculate node distribution per level
+    // calculate node distribution per level
     let mut level_counts: HashMap<usize, usize> = HashMap::new();
     for &lvl in levels.values() {
         *level_counts.entry(lvl).or_default() += 1;
@@ -103,7 +103,7 @@ pub fn apply_layout(
             .cmp(&nodes[b].label.to_lowercase())
     });
 
-    // Apply calculated positions
+    // apply positions
     for &idx in &sorted_indices {
         let lvl = levels[&idx];
         let pos_in_lvl = current_in_level.entry(lvl).or_default();

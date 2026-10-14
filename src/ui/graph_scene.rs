@@ -201,8 +201,7 @@ impl App {
                             crate::layouts::apply(self.ui.current_layout, nodes, edges, &mut *root_lock);
                             ui.close();
                         }
-
-                    });
+                    }).response.on_hover_text("Switch between different graph layout strategies");
                 },
             );
         });
@@ -288,7 +287,8 @@ impl App {
             .fill(self.ui.theme.button_bg)
             .inner_margin(3.0)
             .corner_radius(5.0)
-            .stroke(egui::Stroke::new(2.0_f32, self.ui.theme.master_bg));
+            .stroke(egui::Stroke::new(2.0_f32, self.ui.theme.master_bg))
+            .shadow(egui::Shadow::NONE);
 
         egui::Window::new("legend_and_controls_window")
             .anchor(egui::Align2::LEFT_TOP, egui::vec2(12.0, 101.0))
@@ -404,7 +404,8 @@ impl App {
                         .stroke(egui::Stroke::new(
                             1.0_f32,
                             self.ui.theme.edge_fg,
-                        ));
+                        ))
+                        .shadow(egui::Shadow::NONE);
 
                 let infobox_width = 350.0;
                 let infobox_height = canvas_rect.height() - 15.0;
@@ -522,7 +523,8 @@ impl App {
                 .fill(self.ui.theme.button_bg)
                 .inner_margin(15.0)
                 .corner_radius(8.0)
-                .stroke(egui::Stroke::new(1.0_f32, self.ui.theme.edge_fg));
+                .stroke(egui::Stroke::new(1.0_f32, self.ui.theme.edge_fg))
+                .shadow(egui::Shadow::NONE);
 
             egui::Window::new("empty_graph_info")
                 .collapsible(false)
@@ -565,6 +567,7 @@ impl App {
                         vec![("The ", false), ("Export ", true), ("button exports the loaded data in different formats.", false)],
                         vec![("The ", false), ("Colour Mode ", true), ("button switches the view between light and dark colour themes.", false)],
                         vec![("The ", false), ("Reset View ", true), ("button loads the initial view of the graph that was created after submitting your search.", false)],
+                        vec![("The ", false), ("Layout ", true), ("button allows you to switch between different graph layout strategies.", false)],
                         vec![("A ", false), ("Legend ", true), ("and further information on graph ", false), ("Controls ", true), ("can be found in the top left corner.", false)],
                         vec![("The KG traversal window can be resized by dragging the white triangle at the bottom right.", false)],
                     ];
