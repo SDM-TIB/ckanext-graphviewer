@@ -548,28 +548,17 @@ impl App {
                     ui.add_space(-20.0);
 
                     ui.vertical_centered(|ui| {
-                        ui.heading(egui::RichText::new("Welcome to the LDM KG Traversal Tool")
+                        ui.heading(egui::RichText::new("Welcome to the LDM KG Traversal Tool.")
                                    .size(18.0)
                                    .color(self.ui.theme.text_fg)
                                    .strong());
                     });
 
-                    ui.label(egui::RichText::new(
-                        "This tool enables you to graphically traverse the content of the LDM knowledge graph (KG)."
-                    ).size(15.0).color(self.ui.theme.text_fg));
-
                     let features = [
-                        vec![("Start by selecting a start point type (e.g., Author Name, Dataset Title, or Paper Title) from the dropdown menu in the top search bar.", false)],
-                        vec![("Enter your search term and click ", false), ("Confirm ", true), ("to query the knowledge graph.", false)],
-                        vec![("After loading a starting point, the ", false), ("Graph View ", true), ("visualizes the retrieved information as graph nodes and edges.", false)],
-                        vec![("The ", false), ("Analytics View ", true), ("shows information about the loaded RDF triples.", false)],
-                        vec![("The ", false), ("Node Inspector View ", true), ("shows a tabular view of the information connected to a node.", false)],
-                        vec![("The ", false), ("Export ", true), ("button exports the loaded data in different formats.", false)],
-                        vec![("The ", false), ("Colour Mode ", true), ("button switches the view between light and dark colour themes.", false)],
-                        vec![("The ", false), ("Reset View ", true), ("button loads the initial view of the graph that was created after submitting your search.", false)],
-                        vec![("The ", false), ("Layout ", true), ("button allows you to switch between different graph layout strategies.", false)],
-                        vec![("A ", false), ("Legend ", true), ("and further information on graph ", false), ("Controls ", true), ("can be found in the top left corner.", false)],
-                        vec![("The KG traversal window can be resized by dragging the white triangle at the bottom right.", false)],
+                        vec![("Search", true), (": Select a start point type in the top bar, enter a term, and click Confirm.", false)],
+                        vec![("Views", true), (": Graph View visualizes nodes and edges. Analytics View displays RDF triples. Node Inspector provides tabular node details.", false)],
+                        vec![("Controls", true), (": Use buttons to Export data, toggle Colour Mode, Reset View to the initial state, or change the graph Layout.", false)],
+                        vec![("UI Details", true), (": Find the Legend in the top-left and resize the window using the bottom-right triangle.", false)],
                     ];
 
                     ui.add_space(3.0);
